@@ -1,8 +1,8 @@
-# AI_Rules_Kolzo
+# cursor-hub
 
 A **public Cursor AI hub**: modular rules, commands, and agents for guiding AI assistants. The content is **language- and model-agnostic** in principle; this repository currently ships **Cursor-only** instructions (rules, slash commands, subagents), with a **Rust-first** set of packs.
 
-## What’s in the repo
+## What's in the repo
 
 - **Packs** under `packs/cursor/`: each pack is a folder with `.cursor/rules/`, `.cursor/commands/`, and optionally `.cursor/agents/`. Install one or more packs into your project.
 - **Shared foundation** (`_shared`): design-log methodology and when-to-log guidance. It is always installed when you install any other pack.
@@ -10,35 +10,52 @@ A **public Cursor AI hub**: modular rules, commands, and agents for guiding AI a
 
 ## Quick install
 
-1. Clone this repo (or add it as a submodule).
+**Recommended: use the hub as a submodule and run tools from the hub** (one consistent path):
 
-2. **Recommended:** From **this repo**, run: **what to install**, then **target directory last**. Use **`all`** for every Rust pack:
-   ```bash
-   cd C:\Users\nikol\Desktop\AI_Rules_Kolzo
-   python tools/install.py all ..\test-project
-   ```
-   The `.` means “current directory”, so create or go to your project folder first, or use a path like `.\my-project` (folder next to the hub) or `C:\Users\nikol\Desktop\my-project`.  
-   Use two dots `..\test-project` for the folder next to the hub; one dot would create inside the hub (script blocks that).
+```bash
+# From your project (or clone cursor-hub first)
+git submodule add https://github.com/your-org/cursor-hub.git .cursor-hub   # or your hub URL
+cd .cursor-hub
+python tools/install.py all /path/to/your/project
+```
 
-3. **Alternative:** If you’re already inside your project folder, you can install into the current directory:
-   ```bash
-   cd C:\Users\nikol\Desktop\my-project
-   python C:\Users\nikol\Desktop\AI_Rules_Kolzo\tools\install.py rust-design-review
-   ```
-   (No target path = install into current directory.)
+**Option: copy tools into your project** so you can run `new_design_log.py` etc. from the project root:
 
-4. This merges the `_shared` pack and the chosen pack(s) into your project’s `.cursor/` and creates `design-log/README.md` if missing.
+```bash
+# From cursor-hub repo root
+python tools/install.py all /path/to/your/project --with-tools
+```
 
-**Examples (run from AI_Rules_Kolzo; use your real path, not the literal “path/to/project”):**
+### Examples (Unix / macOS)
 
-- **All Rust packs (target last):**  
-  `python tools/install.py all ..\test-project`
-- One or more packs:  
-  `python tools/install.py rust-design-review ..\test-project`
-- Dry run:  
-  `python tools/install.py --dry-run all ..\test-project`
-- Overwrite:  
-  `python tools/install.py --overwrite all ..\test-project`
+```bash
+# All Rust packs into a project folder next to the hub
+python tools/install.py all ../my-project
+
+# One or more packs
+python tools/install.py rust-design-review rust-implementation ../my-project
+
+# Dry run
+python tools/install.py --dry-run all ../my-project
+
+# Install and copy tools into target (so you can run new_design_log.py from project)
+python tools/install.py all ../my-project --with-tools
+```
+
+### Examples (Windows)
+
+```powershell
+# All Rust packs into a project folder next to the hub
+python tools/install.py all ..\my-project
+
+# One or more packs
+python tools/install.py rust-design-review rust-implementation ..\my-project
+
+# Install and copy tools into target
+python tools/install.py all ..\my-project --with-tools
+```
+
+**Note:** Target must be **outside** the hub repo (e.g. `../my-project`). The installer blocks installing into the hub itself.
 
 ## Which pack do I use?
 
@@ -49,27 +66,26 @@ A **public Cursor AI hub**: modular rules, commands, and agents for guiding AI a
 | **rust-testing** | TDR (failing test first), add-tests-only, deterministic tests, fixtures. |
 | **rust-review** | PR review checklist, risky-changes scan (unsafe, unwrap, new deps, API breaks). |
 
-You can install multiple packs; they merge into a single `.cursor/` (same command name in two packs overwrites when using `--overwrite`).
+You can install multiple packs; they merge into a single `.cursor/`. Commands are namespaced by pack (e.g. `/rust-design-review__design-review`) so names do not collide. See [CATALOG.md](CATALOG.md) for the full command list.
 
 ## Design log (deterministic numbering)
 
-To create the next design log file **without guessing the number**, run from your **project** root:
+To create the next design log file **without guessing the number**:
 
-```bash
-python tools/new_design_log.py --slug short-name
-```
-
-The script creates `design-log/NNN-short-name.md` and prints its path. Copy the `tools/` folder into your project, or run the script from this repo and pass `--dir` to point at your project’s design-log directory.
+- **If you used `--with-tools`:** from your **project** root run:  
+  `python tools/new_design_log.py --slug short-name`
+- **If you use the hub as a submodule:** from the hub root run:  
+  `python tools/new_design_log.py --slug short-name --dir /path/to/your/project/design-log`
 
 ## Validation
 
-From the AI_Rules_Kolzo repo root:
+From the cursor-hub repo root:
 
 ```bash
 python tools/validate_packs.py
 ```
 
-Checks that every pack has `pack.yml`, rules have valid frontmatter, commands are non-empty, and there are no duplicate command names per pack.
+Checks that every pack has `pack.yml`, rules have valid frontmatter, commands follow the `pack-name__command-name` convention and are non-empty, and there are no duplicate command names per pack.
 
 ## Optional: export design logs
 
@@ -81,9 +97,9 @@ Checks that every pack has `pack.yml`, rules have valid frontmatter, commands ar
 - [docs/using-packs.md](docs/using-packs.md) — Task → command, rules vs commands vs agents.
 - [CATALOG.md](CATALOG.md) — Packs and primary commands.
 - [docs/cursor-primitives.md](docs/cursor-primitives.md) — Rules vs commands vs subagents.
-- [docs/authoring-guidelines.md](docs/authoring-guidelines.md) — Sizing and writing commands.
+- [docs/authoring-guidelines.md](docs/authoring-guidelines.md) — Sizing and writing commands (including command naming).
 - [docs/pack-versioning.md](docs/pack-versioning.md) — Versioning and compatibility.
 
 ## License
 
-See repository license file.
+[MIT](LICENSE). See [CONTRIBUTING.md](CONTRIBUTING.md) if you want to contribute.

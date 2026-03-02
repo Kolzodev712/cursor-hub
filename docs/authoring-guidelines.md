@@ -6,7 +6,7 @@ How to keep packs “just right”: clear purpose, no bloat, commands that force
 
 - **One concern per rule.** If a rule file grows beyond a single theme (e.g. “design review bar” or “Rust error handling”), split it.
 - **Keep alwaysApply rules short.** If it’s always-on, every conversation pays the token cost. Put long procedures in commands.
-- **Commands: one workflow per file.** The command name (filename minus `.md`) should match a single, discoverable task (e.g. `design-review`, `bugfix-tdr`).
+- **Commands: one workflow per file.** The command filename must be `{pack-name}__{task}.md` (e.g. `rust-design-review__design-review.md` → `/rust-design-review__design-review`). This avoids collisions when installing multiple packs.
 - **Agents: one role per file.** Describe behavior and scope; avoid duplicating long rule text.
 
 ## Avoid alwaysApply bloat
@@ -27,7 +27,7 @@ State the exact commands and the success criterion (e.g. “all tests pass”, �
 ## Naming
 
 - **Rules:** `kebab-case.mdc`, descriptive (e.g. `rust-anti-footguns.mdc`, `design-log.mdc`).
-- **Commands:** `kebab-case.md`; name matches the slash command (e.g. `design-review.md` → `/design-review`).
+- **Commands:** `{pack-name}__{kebab-case}.md`; the stem is the slash command (e.g. `rust-design-review__design-review.md` → `/rust-design-review__design-review`). See [pack-versioning](pack-versioning.md) for the naming convention.
 - **Agents:** `kebab-case.md` (e.g. `design-critic.md`, `rust-implementer.md`).
 
 ## Frontmatter (rules)

@@ -11,7 +11,7 @@ Implement from an approved design log. Cite the log number; make stepwise edits;
    - Make only the edits for that phase. Limit files changed per step where possible.
    - Run verification: `cargo fmt --all -- --check` (then `cargo fmt --all` if needed), `cargo clippy --fix --allow-dirty --all-targets --all-features -- -D warnings`, `cargo test --all-features`. Fix any failures.
    - Optionally summarize what changed before moving to the next phase.
-5. **Implementation Results:** After implementation, append the design log with an "Implementation Results" section: what was done, any deviations from the plan, and test/verification outcome. If there was no design log (direct request), and you suggest the user record this later, tell them to use the **/adr-new** command with a slug (or run `python tools/new_design_log.py --slug <name>`); do not say "via design-log/" or mention a "/design-log" command.
+5. **Implementation Results:** After implementation, append the design log with an "Implementation Results" section: what was done, any deviations from the plan, and test/verification outcome. If there was no design log (direct request), and you suggest the user record this later, tell them to use **/rust-design-review__adr-new** with a slug (or run `python tools/new_design_log.py --slug <name>`); do not say "via design-log/" or mention a "/design-log" command.
 6. **Deviations:** If implementation diverged from the design, document why in the log.
 
 Do not add new dependencies or scope beyond the design log unless the user explicitly asks.

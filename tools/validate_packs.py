@@ -87,6 +87,11 @@ def validate_pack(pack_path: str, pack_name: str) -> list[str]:
             if not os.path.isfile(path):
                 continue
             base = os.path.splitext(name)[0]
+            # Require namespace: command filename must be pack_name__suffix to avoid cross-pack collisions
+            if pack_name != "_shared" and not base.startswith(pack_name + "__"):
+                errors.append(
+                    f"{pack_name}: command file {name} must be named {{pack}}__{{name}}.md (e.g. {pack_name}__{base}.md)"
+                )
             if base in cmd_names:
                 errors.append(f"{pack_name}: duplicate command name: {base}")
             cmd_names.append(base)

@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """
-Install Cursor packs from AI_Rules_Kolzo into a target project.
+Install Cursor packs from cursor-hub into a target project.
 Always includes _shared. Put the target directory last.
 
 Usage:
   python tools/install.py [options] <pack> [pack ...] <target_dir>
-  python tools/install.py all ..\\my-project          # all Rust packs into my-project
-  python tools/install.py rust-design-review ..\\my-project
+  python tools/install.py all ../my-project          # Unix
+  python tools/install.py all ..\\my-project          # Windows
+  python tools/install.py rust-design-review ../my-project --with-tools
 
-Use "all" to install every Rust pack. Target is the last argument (use ..\name for the folder next to the hub).
+Use "all" to install every Rust pack. Target is the last argument.
 """
 from __future__ import annotations
 
@@ -48,7 +49,7 @@ def find_repo_root(start: str) -> str | None:
 
 
 def get_hub_root() -> str | None:
-    """Find AI_Rules_Kolzo root: from cwd first, then from this script's location."""
+    """Find cursor-hub root: from cwd first, then from this script's location."""
     root = find_repo_root(os.getcwd())
     if root:
         return root
@@ -113,6 +114,38 @@ def merge_cursor_dir(src: str, dst: str, overwrite: bool, dry_run: bool) -> tupl
     return (r, c, a)
 
 
+def read_pack_version(pack_dir: str) -> str | None:
+    """Read version from pack.yml if present. Returns None if missing or unparseable."""
+    path = os.path.join(pack_dir, "pack.yml")
+    if not os.path.isfile(path):
+        return None
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith("version:") and ":" in line:
+                    val = line.split(":", 1)[1].strip().strip("'\"")
+                    return val if val else None
+    except OSError:
+        pass
+    return None
+
+
+def copy_tools(repo_root: str, target: str, dry_run: bool) -> None:
+    """Copy tools/ from hub into target project so user can run new_design_log.py etc. from project root."""
+    src = os.path.join(repo_root, "tools")
+    dst = os.path.join(target, "tools")
+    if not os.path.isdir(src):
+        return
+    if dry_run:
+        print("[dry-run] would copy tools/ into target")
+        return
+    if os.path.isdir(dst):
+        shutil.rmtree(dst)
+    shutil.copytree(src, dst, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+    print("  Copied tools/ into target (run python tools/new_design_log.py from project root).")
+
+
 def ensure_design_log_readme(target: str, dry_run: bool) -> None:
     """Create target/design-log/README.md if missing."""
     log_dir = os.path.join(target, "design-log")
@@ -131,6 +164,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Install Cursor packs into a target project.")
     parser.add_argument("--dry-run", action="store_true", help="Print what would be done without writing")
     parser.add_argument("--overwrite", action="store_true", help="Overwrite existing rule/command/agent files")
+    parser.add_argument("--with-tools", action="store_true", help="Copy tools/ into target so you can run new_design_log.py from project root")
     parser.add_argument("--target", "-t", metavar="DIR", help="Target project directory (else last arg is target)")
     parser.add_argument("packs", nargs="+", help="Pack name(s) then target dir as last arg. Use 'all' for all Rust packs.")
     args = parser.parse_args()
@@ -159,7 +193,7 @@ def main() -> int:
 
     repo_root = get_hub_root()
     if not repo_root:
-        print("Error: Could not find AI_Rules_Kolzo root (run from inside the hub repo or run install.py from the hub's tools/ dir)", file=sys.stderr)
+        print("Error: Could not find cursor-hub root (run from inside the hub repo or run install.py from the hub's tools/ dir)", file=sys.stderr)
         return 1
 
     repo_root = os.path.normpath(os.path.abspath(repo_root))
@@ -170,7 +204,7 @@ def main() -> int:
         print("Error: Target is inside the hub repo.", file=sys.stderr)
         print(f"  Target: {target}", file=sys.stderr)
         print(f"  Hub:    {repo_root}", file=sys.stderr)
-        print("  Use ..\\test-project (go UP one level) for the folder next to the hub, not .\\test-project.", file=sys.stderr)
+        print("  Use a target outside the hub (e.g. ../my-project).", file=sys.stderr)
         return 1
 
     print(f"Target: {target}")
@@ -193,11 +227,22 @@ def main() -> int:
 
     ensure_design_log_readme(target, args.dry_run)
 
+    if args.with_tools:
+        copy_tools(repo_root, target, args.dry_run)
+
     if args.dry_run:
         print("Dry run complete. No files written.")
     else:
         print(f"Installed into: {target}")
         print(f"  Packs: _shared, {', '.join(pack_names)}")
+        versions = []
+        for pack_dir in pack_dirs:
+            pack_name = os.path.basename(pack_dir)
+            ver = read_pack_version(pack_dir)
+            if ver:
+                versions.append(f"{pack_name}={ver}")
+        if versions:
+            print(f"  Versions: {' '.join(versions)}")
         if total_r or total_c or total_a:
             print(f"  Added: {total_r} rules, {total_c} commands, {total_a} agents")
         else:

@@ -10,7 +10,7 @@ Brief reference for how this hub uses Cursor’s building blocks.
 
 ## Commands (`.cursor/commands/*.md`)
 
-- **What:** Slash-triggered workflows (e.g. `/design-review`, `/pr-review`). Stored as Markdown.
+- **What:** Slash-triggered workflows (e.g. `/rust-design-review__design-review`, `/rust-review__pr-review`). Stored as Markdown.
 - **When:** User types `/` and picks a command; the command content is used as instructions for that turn.
 - **Use:** Multi-step workflows (review, create ADR, TDR, refactor-safe). Make the steps explicit and, where relevant, require verification (e.g. “run cargo test”).
 

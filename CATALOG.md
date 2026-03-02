@@ -1,6 +1,6 @@
 # Catalog of packs
 
-Packs live under `packs/cursor/`. Each has a `pack.yml` and optional `.cursor/rules/`, `.cursor/commands/`, `.cursor/agents/`.
+Packs live under `packs/cursor/`. Each has a `pack.yml` and optional `.cursor/rules/`, `.cursor/commands/`, `.cursor/agents/`. Command filenames use the `pack-name__command-name` convention so installing multiple packs does not collide.
 
 ---
 
@@ -29,9 +29,9 @@ Packs live under `packs/cursor/`. Each has a `pack.yml` and optional `.cursor/ru
 
 | Command | Description |
 |--------|-------------|
-| `/design-review` | Strict design review: critical questions, recommended option, risks, verification. |
-| `/adr-new` | Create a new design log via `new_design_log.py --slug <name>` and fill template. |
-| `/decision-summary` | Summarize final decision and why alternatives were rejected. |
+| `/rust-design-review__design-review` | Strict design review: critical questions, recommended option, risks, verification. |
+| `/rust-design-review__adr-new` | Create a new design log via `new_design_log.py --slug <name>` and fill template. |
+| `/rust-design-review__decision-summary` | Summarize final decision and why alternatives were rejected. |
 
 **Agents:**
 
@@ -52,8 +52,8 @@ Packs live under `packs/cursor/`. Each has a `pack.yml` and optional `.cursor/ru
 
 | Command | Description |
 |--------|-------------|
-| `/implement-module` | Implement from an approved design log; cite log; stepwise edits; verification loop; append Implementation Results. |
-| `/refactor-safe` | Plan 3–6 steps; limit files per step; run tests after each step; show diff summary. |
+| `/rust-implementation__implement-module` | Implement from an approved design log; cite log; stepwise edits; verification loop; append Implementation Results. |
+| `/rust-implementation__refactor-safe` | Plan 3–6 steps; limit files per step; run tests after each step; show diff summary. |
 
 **Agents:**
 
@@ -73,8 +73,8 @@ Packs live under `packs/cursor/`. Each has a `pack.yml` and optional `.cursor/ru
 
 | Command | Description |
 |--------|-------------|
-| `/bugfix-tdr` | Failing test first, then fix, then fmt/clippy/test. |
-| `/add-tests-only` | No prod code changes; only tests/fixtures; justify coverage. |
+| `/rust-testing__bugfix-tdr` | Failing test first, then fix, then fmt/clippy/test. |
+| `/rust-testing__add-tests-only` | No prod code changes; only tests/fixtures; justify coverage. |
 
 **Agents:**
 
@@ -94,8 +94,8 @@ Packs live under `packs/cursor/`. Each has a `pack.yml` and optional `.cursor/ru
 
 | Command | Description |
 |--------|-------------|
-| `/pr-review` | File-by-file findings with must-fix vs nice-to-have. |
-| `/risky-changes-scan` | Flag unsafe, unwrap, panics, new deps, public API breaks. |
+| `/rust-review__pr-review` | File-by-file findings with must-fix vs nice-to-have. |
+| `/rust-review__risky-changes-scan` | Flag unsafe, unwrap, panics, new deps, public API breaks. |
 
 **Agents:**
 
@@ -105,7 +105,7 @@ Packs live under `packs/cursor/`. Each has a `pack.yml` and optional `.cursor/ru
 
 ## Installing
 
-From the AI_Rules_Kolzo repo root:
+From the cursor-hub repo root:
 
 ```bash
 python tools/install.py <pack> [pack ...] <target_dir>
