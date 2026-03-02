@@ -1,0 +1,19 @@
+---
+description: "Rust implementation discipline: small diffs, no scope creep, verification loop"
+alwaysApply: false
+globs:
+  - "**/*.rs"
+  - "**/Cargo.toml"
+---
+
+# Rust Core (Implementation)
+
+- **Small diffs:** Prefer incremental changes. One logical change per edit session; avoid bundling unrelated fixes.
+- **No scope creep:** Implement only what the task or design log specifies. Do not add new features or refactors unless explicitly asked.
+- **Dependencies:** Do not add new dependencies unless the user or design log explicitly requests them.
+- **Avoid unwrap/expect in production paths:** Use proper error handling (`Result`, `?`, or `match`) for user-facing or library code. `unwrap`/`expect` are acceptable in tests, examples, or clearly unreachable paths; document why if used.
+- **Verification:** After edits, run (from project root or workspace root):
+  - `cargo fmt --all -- --check` (fix with `cargo fmt --all` if needed)
+  - `cargo clippy --fix --allow-dirty --all-targets --all-features -- -D warnings`
+  - `cargo test --all-features`
+  Optionally: `cargo audit`, `cargo check --all-targets --all-features`. Fix any failures before considering the task done.

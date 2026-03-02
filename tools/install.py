@@ -1,0 +1,218 @@
+#!/usr/bin/env python3
+"""
+Install Cursor packs from AI_Rules_Kolzo into a target project.
+Always includes _shared. Put the target directory last.
+
+Usage:
+  python tools/install.py [options] <pack> [pack ...] <target_dir>
+  python tools/install.py all ..\\my-project          # all Rust packs into my-project
+  python tools/install.py rust-design-review ..\\my-project
+
+Use "all" to install every Rust pack. Target is the last argument (use ..\name for the folder next to the hub).
+"""
+from __future__ import annotations
+
+import argparse
+import os
+import shutil
+import sys
+
+
+PACKS_ROOT = "packs"
+CURSOR_DIR = ".cursor"
+RULES = "rules"
+COMMANDS = "commands"
+AGENTS = "agents"
+SHARED_PACK = "_shared"
+# Alias: "all" or "rust" = all Rust packs
+ALL_RUST_PACKS = ["rust-design-review", "rust-implementation", "rust-testing", "rust-review"]
+DESIGN_LOG_README = """# Design Log
+
+Design decisions and implementation notes. Create new entries with:
+
+    python tools/new_design_log.py --slug <short-name>
+
+(Ensure the tools are available in your project or in this repo.)
+"""
+
+
+def find_repo_root(start: str) -> str | None:
+    """Walk up from start to find a directory containing packs/cursor/_shared."""
+    current = os.path.abspath(start)
+    while current and current != os.path.dirname(current):
+        check = os.path.join(current, PACKS_ROOT, "cursor", SHARED_PACK)
+        if os.path.isdir(check):
+            return current
+        current = os.path.dirname(current)
+    return None
+
+
+def get_hub_root() -> str | None:
+    """Find AI_Rules_Kolzo root: from cwd first, then from this script's location."""
+    root = find_repo_root(os.getcwd())
+    if root:
+        return root
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    candidate = os.path.normpath(os.path.join(script_dir, ".."))
+    if os.path.isdir(os.path.join(candidate, PACKS_ROOT, "cursor", SHARED_PACK)):
+        return candidate
+    return None
+
+
+def get_pack_dirs(repo_root: str, pack_names: list[str]) -> list[str]:
+    """Resolve pack names to full paths. Always prepend _shared."""
+    cursor_packs = os.path.join(repo_root, PACKS_ROOT, "cursor")
+    seen = set()
+    out = []
+    for name in [SHARED_PACK] + [p for p in pack_names if p != SHARED_PACK]:
+        if name in seen:
+            continue
+        path = os.path.join(cursor_packs, name)
+        if not os.path.isdir(path):
+            raise FileNotFoundError(f"Pack not found: {name} at {path}")
+        pack_yml = os.path.join(path, "pack.yml")
+        if not os.path.isfile(pack_yml):
+            raise FileNotFoundError(f"Pack has no pack.yml: {name}")
+        seen.add(name)
+        out.append(path)
+    return out
+
+
+def merge_cursor_dir(src: str, dst: str, overwrite: bool, dry_run: bool) -> tuple[int, int, int]:
+    """Copy contents of src/.cursor/* into dst/.cursor/*. Merge by default; overwrite replaces.
+    Returns (rules_count, commands_count, agents_count) of files copied."""
+    src_cursor = os.path.join(src, CURSOR_DIR)
+    r, c, a = 0, 0, 0
+    if not os.path.isdir(src_cursor):
+        return (r, c, a)
+    for sub in (RULES, COMMANDS, AGENTS):
+        src_sub = os.path.join(src_cursor, sub)
+        if not os.path.isdir(src_sub):
+            continue
+        dst_sub = os.path.join(dst, CURSOR_DIR, sub)
+        if dry_run:
+            for name in os.listdir(src_sub):
+                f = os.path.join(src_sub, name)
+                if os.path.isfile(f):
+                    print(f"[dry-run] would add {os.path.join(CURSOR_DIR, sub, name)}")
+            continue
+        os.makedirs(dst_sub, exist_ok=True)
+        for name in os.listdir(src_sub):
+            src_file = os.path.join(src_sub, name)
+            if not os.path.isfile(src_file):
+                continue
+            dst_file = os.path.join(dst_sub, name)
+            if overwrite or not os.path.exists(dst_file):
+                shutil.copy2(src_file, dst_file)
+                if sub == RULES:
+                    r += 1
+                elif sub == COMMANDS:
+                    c += 1
+                else:
+                    a += 1
+    return (r, c, a)
+
+
+def ensure_design_log_readme(target: str, dry_run: bool) -> None:
+    """Create target/design-log/README.md if missing."""
+    log_dir = os.path.join(target, "design-log")
+    readme = os.path.join(log_dir, "README.md")
+    if os.path.isfile(readme):
+        return
+    if dry_run:
+        print("[dry-run] would create design-log/README.md")
+        return
+    os.makedirs(log_dir, exist_ok=True)
+    with open(readme, "w", encoding="utf-8") as f:
+        f.write(DESIGN_LOG_README)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Install Cursor packs into a target project.")
+    parser.add_argument("--dry-run", action="store_true", help="Print what would be done without writing")
+    parser.add_argument("--overwrite", action="store_true", help="Overwrite existing rule/command/agent files")
+    parser.add_argument("--target", "-t", metavar="DIR", help="Target project directory (else last arg is target)")
+    parser.add_argument("packs", nargs="+", help="Pack name(s) then target dir as last arg. Use 'all' for all Rust packs.")
+    args = parser.parse_args()
+
+    # Resolve target: explicit --target, or last positional arg, or cwd if only one arg
+    if args.target:
+        target = os.path.abspath(args.target)
+        pack_names = list(args.packs)
+    elif len(args.packs) == 1:
+        pack_names = list(args.packs)
+        target = os.path.abspath(os.getcwd())
+    else:
+        pack_names = list(args.packs[:-1])
+        target = os.path.abspath(args.packs[-1])
+
+    # Expand "all" or "rust" to all Rust packs
+    expanded = []
+    for p in pack_names:
+        if p in ("all", "rust"):
+            expanded.extend(ALL_RUST_PACKS)
+        else:
+            expanded.append(p)
+    # Dedupe, keep order
+    seen = set()
+    pack_names = [x for x in expanded if x not in seen and not seen.add(x)]
+
+    repo_root = get_hub_root()
+    if not repo_root:
+        print("Error: Could not find AI_Rules_Kolzo root (run from inside the hub repo or run install.py from the hub's tools/ dir)", file=sys.stderr)
+        return 1
+
+    repo_root = os.path.normpath(os.path.abspath(repo_root))
+    target = os.path.normpath(os.path.abspath(target))
+
+    # Block installing into a subfolder of the hub (e.g. .\test-project from inside the hub)
+    if target == repo_root or target.startswith(repo_root + os.sep):
+        print("Error: Target is inside the hub repo.", file=sys.stderr)
+        print(f"  Target: {target}", file=sys.stderr)
+        print(f"  Hub:    {repo_root}", file=sys.stderr)
+        print("  Use ..\\test-project (go UP one level) for the folder next to the hub, not .\\test-project.", file=sys.stderr)
+        return 1
+
+    print(f"Target: {target}")
+
+    try:
+        pack_dirs = get_pack_dirs(repo_root, pack_names)
+    except FileNotFoundError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+    if not args.dry_run:
+        os.makedirs(os.path.join(target, CURSOR_DIR), exist_ok=True)
+
+    total_r, total_c, total_a = 0, 0, 0
+    for pack_dir in pack_dirs:
+        r, c, a = merge_cursor_dir(pack_dir, target, args.overwrite, args.dry_run)
+        total_r += r
+        total_c += c
+        total_a += a
+
+    ensure_design_log_readme(target, args.dry_run)
+
+    if args.dry_run:
+        print("Dry run complete. No files written.")
+    else:
+        print(f"Installed into: {target}")
+        print(f"  Packs: _shared, {', '.join(pack_names)}")
+        if total_r or total_c or total_a:
+            print(f"  Added: {total_r} rules, {total_c} commands, {total_a} agents")
+        else:
+            print("  (No new files; target already had these. Use --overwrite to replace.)")
+        print("  design-log/README.md created if missing.")
+        # Verify and list so user can confirm location
+        cursor_dir = os.path.join(target, CURSOR_DIR)
+        if os.path.isdir(cursor_dir):
+            for sub in (RULES, COMMANDS, AGENTS):
+                subpath = os.path.join(cursor_dir, sub)
+                if os.path.isdir(subpath):
+                    n = len([f for f in os.listdir(subpath) if os.path.isfile(os.path.join(subpath, f))])
+                    print(f"  -> {os.path.join(target, CURSOR_DIR, sub)} ({n} files)")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

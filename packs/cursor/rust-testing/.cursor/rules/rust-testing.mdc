@@ -1,0 +1,16 @@
+---
+description: "Rust testing philosophy: unit vs integration, deterministic, fixtures, property tests"
+alwaysApply: false
+globs:
+  - "**/*.rs"
+  - "**/tests/**/*.rs"
+---
+
+# Rust Testing
+
+- **Unit vs integration:** Use unit tests for pure logic and single-module behavior; use integration tests for cross-module or I/O behavior. Keep tests fast and deterministic.
+- **Deterministic tests:** Avoid reliance on wall clock, random seed (unless fixed), or external services. Use mocks or in-memory implementations for I/O.
+- **Avoid fragile timing:** Do not use sleeps or timeouts as the primary synchronization; prefer deterministic setup and explicit completion.
+- **Fixtures:** Use shared test data or helpers to keep tests readable and consistent. Avoid duplicating large setup across tests.
+- **Property tests:** When useful (invariants, round-trips, idempotence), use property-based testing (e.g. `proptest`, `quickcheck`) to complement example-based tests.
+- **Coverage:** Aim for meaningful coverage of behavior and edge cases, not "coverage theater." Prefer tests that would catch real regressions. Do **not** add tests that only assert what the implementation literally does with no independent specification (e.g. testing that a function returns a constant when the implementation is that constant); such tests add noise and do not catch regressions.

@@ -1,0 +1,13 @@
+---
+description: "Rust pitfalls to avoid: lifetimes, borrowing, allocations, errors, unsafe"
+alwaysApply: false
+globs:
+  - "**/*.rs"
+---
+
+# Rust Anti-Footguns
+
+- **Lifetimes and borrowing:** Do not assume ownership or lifetime relationships. When adding or changing references, verify the borrow checker passes and that no hidden long-lived borrows block mutations or cause subtle bugs.
+- **Cloning and allocations:** Prefer borrowing over cloning where possible. If cloning is necessary (e.g. for parallelism or API boundaries), make it explicit and justify. Avoid unnecessary allocations in hot paths.
+- **Error handling:** Use `Result` and `?`; convert with `.map_err()` or `thiserror`/`anyhow` as the project uses. Do not swallow errors or use `unwrap()` in library or production code without a clear justification.
+- **Unsafe:** Do not introduce `unsafe` unless required and documented. If `unsafe` is used, add a brief comment explaining the invariant that must hold. Prefer safe abstractions.

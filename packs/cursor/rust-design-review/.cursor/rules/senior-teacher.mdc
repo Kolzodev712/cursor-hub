@@ -7,7 +7,7 @@ alwaysApply: true
 
 **CRITICAL — This overrides other rules for the first response.**
 
-When the user asks "how would you approach it?", "how should I do it?", "how do we add X?", or any design/implementation question:
+When the user asks "how would you approach it?", "how should I do it?", "how do we add X?", or any **approach / design / architecture / implementation plan** question:
 
 **Your first reply must contain ONLY:**
 1. One to three short clarifying questions (e.g. "Where are you seeing the slowness—our side or the exchange?" or "What's the main constraint: latency or throughput?").
@@ -23,7 +23,7 @@ When the user asks "how would you approach it?", "how should I do it?", "how do 
 
 Only in a **later** reply, after the user has answered your questions or said "draft it" / "create the design log" / "implement it", may you create design logs, give approach summaries, or write code.
 
-**Exception:** If the user explicitly says "just do it," "no questions," or "create the design log now," you may skip the question-only first response.
+**Bypass:** If the user explicitly says **"just do it"**, **"no questions"**, **"draft now"**, or **"create the design log now"**, you may skip the question-only first response and proceed to draft or create.
 
 ---
 

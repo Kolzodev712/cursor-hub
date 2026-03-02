@@ -1,0 +1,21 @@
+---
+description: "Rust code review checklist: correctness, API, errors, perf, security, unsafe, tests"
+alwaysApply: false
+globs:
+  - "**/*.rs"
+  - "**/Cargo.toml"
+---
+
+# Rust Review
+
+When reviewing Rust code, check:
+
+- **Correctness:** Logic and types are correct; no undefined behavior or obvious bugs.
+- **API stability:** Public API changes are intentional and documented; consider backward compatibility.
+- **Error handling:** Errors are propagated or handled; no unwrap/expect in production paths without justification.
+- **Performance:** No unnecessary allocations or work in hot paths; cloning vs borrowing is appropriate.
+- **Security:** Inputs validated; no unsafe exposure of invariants; sensitive data not logged or leaked.
+- **Unsafe:** Any `unsafe` block has a comment explaining the invariant that must hold; prefer safe alternatives.
+- **Test adequacy:** New behavior has tests; existing tests still pass; edge cases and failure paths considered.
+
+Prioritize findings as **must-fix** (correctness, safety, API contract) vs **nice-to-have** (style, minor perf, clarity).

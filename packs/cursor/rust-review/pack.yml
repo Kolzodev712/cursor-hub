@@ -1,0 +1,3 @@
+name: rust-review
+description: Code review pack — PR review checklist, risky-changes scan, correctness and maintainability.
+version: "0.1.0"

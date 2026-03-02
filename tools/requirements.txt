@@ -1,0 +1,5 @@
+# Tools in this directory use the Python standard library only.
+# No need to run: pip install -r requirements.txt
+#
+# If you add a dependency (e.g. pymongo for export_design_logs_mongo.py), list it here:
+# pymongo>=4.0
