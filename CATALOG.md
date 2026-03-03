@@ -30,6 +30,7 @@ Packs live under `packs/cursor/`. Each has a `pack.yml` and optional `.cursor/ru
 | Command | Description |
 |--------|-------------|
 | `/rust-design-review__design-review` | Strict design review: critical questions, recommended option, risks, verification. |
+| `/rust-design-review__design-gate` | Hard gate: refuse to propose a solution until user provides complete architecture (modules, data flow, alternatives, etc.); respond with BLOCKED + MISSING + questions until then; then output PROPOSED PLAN only. |
 | `/rust-design-review__adr-new` | Create a new design log via `new_design_log.py --slug <name>` and fill template. |
 | `/rust-design-review__decision-summary` | Summarize final decision and why alternatives were rejected. |
 
@@ -53,6 +54,7 @@ Packs live under `packs/cursor/`. Each has a `pack.yml` and optional `.cursor/ru
 | Command | Description |
 |--------|-------------|
 | `/rust-implementation__implement-module` | Implement from an approved design log; cite log; stepwise edits; verification loop; append Implementation Results. |
+| `/rust-implementation__impl-gate` | Hard gate: refuse to write code until user provides types, error types, function signatures, and wiring; respond with BLOCKED + MISSING + questions until then; then implement only function bodies. |
 | `/rust-implementation__refactor-safe` | Plan 3–6 steps; limit files per step; run tests after each step; show diff summary. |
 
 **Agents:**
@@ -75,6 +77,7 @@ Packs live under `packs/cursor/`. Each has a `pack.yml` and optional `.cursor/ru
 |--------|-------------|
 | `/rust-testing__bugfix-tdr` | Failing test first, then fix, then fmt/clippy/test. |
 | `/rust-testing__add-tests-only` | No prod code changes; only tests/fixtures; justify coverage. |
+| `/rust-testing__test-gate` | Hard gate: refuse to write test code until user provides full test breakdown (cases, assertions, unit/integration, fixtures); respond with BLOCKED + MISSING + questions until then; implement tests exactly as specified; suggest extra cases for approval only. |
 
 **Agents:**
 

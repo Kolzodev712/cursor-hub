@@ -23,12 +23,15 @@ Use **one command per task**. The command loads the workflow and, in effect, the
 | You want to… | Use this command | In practice |
 |--------------|------------------|-------------|
 | **Review a design / get critical questions** | `/rust-design-review__design-review` | Model follows the design-review steps and behaves like the design critic (challenge, alternatives, recommendation, verification). |
+| **Force design-first (hard gate)** | `/rust-design-review__design-gate` | Refuses to propose a solution until you provide complete architecture; responds with BLOCKED + MISSING + questions; then outputs PROPOSED PLAN only. |
 | **Start a new design log (ADR)** | `/rust-design-review__adr-new` | Creates a new log via the script and fills the template. |
 | **Summarise a decision** | `/rust-design-review__decision-summary` | Summarises chosen option and why alternatives were rejected. |
 | **Implement from an approved design log** | `/rust-implementation__implement-module` | Stepwise implementation, cites the log, runs verification; behaves like the rust-implementer. |
+| **Force API-first implementation (hard gate)** | `/rust-implementation__impl-gate` | Refuses to write code until you provide types, signatures, error types, and wiring; then implements only function bodies. |
 | **Refactor safely** | `/rust-implementation__refactor-safe` | 3–6 steps, tests after each step, no behavior change. |
 | **Fix a bug (test-first)** | `/rust-testing__bugfix-tdr` | Failing test first, then fix, then fmt/clippy/test. |
 | **Add tests only (no prod changes)** | `/rust-testing__add-tests-only` | Only tests/fixtures; justifies coverage. |
+| **Force test-plan-first (hard gate)** | `/rust-testing__test-gate` | Refuses to write test code until you provide full test breakdown; then implements tests exactly as specified. |
 | **Review a PR / diff** | `/rust-review__pr-review` | File-by-file, must-fix vs nice-to-have. |
 | **Scan for risky patterns** | `/rust-review__risky-changes-scan` | Flags unsafe, unwrap, panics, new deps, API breaks. |
 
@@ -50,9 +53,9 @@ You don't turn these on/off per task. They're part of the environment. If you wa
 
 Each command is written so that running it gets you the right "agent" behavior:
 
-- `/rust-design-review__design-review` → **design critic** (skeptical, challenges assumptions).
-- `/rust-implementation__implement-module`, `/rust-implementation__refactor-safe` → **rust-implementer** (small diffs, verification loop).
-- `/rust-testing__bugfix-tdr`, `/rust-testing__add-tests-only` → **test author** (reproducible tests, no coverage theater).
+- `/rust-design-review__design-review`, `/rust-design-review__design-gate` → **design critic** (skeptical, challenges assumptions; design-gate adds a hard refusal until architecture is complete).
+- `/rust-implementation__implement-module`, `/rust-implementation__impl-gate`, `/rust-implementation__refactor-safe` → **rust-implementer** (small diffs, verification loop; impl-gate adds refusal until types/signatures/wiring are provided).
+- `/rust-testing__bugfix-tdr`, `/rust-testing__add-tests-only`, `/rust-testing__test-gate` → **test author** (reproducible tests, no coverage theater; test-gate adds refusal until full test breakdown is provided).
 - `/rust-review__pr-review`, `/rust-review__risky-changes-scan` → **reviewer** (correctness, must-fix vs nice-to-have).
 
 So: **use the command for the task; the agent is built into that command.** If Cursor later adds an explicit "choose agent" UI, the same agent files can back that; until then, commands are how you "use" the right agent.
