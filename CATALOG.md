@@ -10,7 +10,7 @@ Packs live under `packs/cursor/`. Each has a `pack.yml` and optional `.cursor/ru
 
 **Contents:**
 
-- **Rules:** `design-log.mdc` — when to log, log structure (Background → Problem → Q/A → Design → Plan → Examples → Trade-offs → Verification → Implementation Results), deterministic creation via `tools/new_design_log.py --slug <name>`.
+- **Rules:** `design-log.mdc` — when to log, log structure (Background → Problem → Q/A → Design → Plan → Examples → Trade-offs → Verification → Implementation Results), deterministic creation via `tools/new_design_log.py --slug <name>`; logs live in `.cursor/design-log/`.
 
 **No commands or agents.** Other packs add those.
 

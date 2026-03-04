@@ -5,14 +5,14 @@ alwaysApply: true
 
 # Design Log Methodology
 
-The project follows a design-log methodology. Logs live in `./design-log/` as `NNN-short-name.md` (e.g. `001-risk-cache.md`).
+The project follows a design-log methodology. Logs live in `./.cursor/design-log/` as `NNN-short-name.md` (e.g. `001-risk-cache.md`).
 
 **CRITICAL — Design log numbering.**
 
-Before creating **any** new file like `NNN-something.md` in `./design-log/`:
+Before creating **any** new file like `NNN-something.md` in `./.cursor/design-log/`:
 
-1. **Preferred:** Run `python tools/new_design_log.py --slug <short-name>` (from the project root). The script prints the created file path. Use that path; do not guess NNN.
-2. **Fallback:** Only if the script is unavailable (e.g. tools not installed), list the directory `./design-log/` in this response (e.g. `ls ./design-log` or equivalent), find all files matching `NNN-*.md`, take the maximum NNN, and use next number = max + 1 (or **001** if none exist). Then create the file with that number.
+1. **Preferred:** Run `python tools/new_design_log.py --slug <short-name>` (from the project root). The script defaults to `.cursor/design-log/` and prints the created file path. Use that path; do not guess NNN.
+2. **Fallback:** Only if the script is unavailable (e.g. tools not installed), list the directory `./.cursor/design-log/` in this response (e.g. `ls ./.cursor/design-log` or equivalent), find all files matching `NNN-*.md`, take the maximum NNN, and use next number = max + 1 (or **001** if none exist). Then create the file with that number.
 
 **Never** use 002, 003, etc. from memory or from earlier in the chat. Prefer the helper script; otherwise always derive the number from a fresh directory listing in the same response where you create the file.
 
@@ -36,7 +36,7 @@ Do **not** create or write a design log in your first response. Follow the Senio
 
 ## Before Making Changes
 
-1. Check design logs in `./design-log/` for existing designs and implementation notes.
+1. Check design logs in `./.cursor/design-log/` for existing designs and implementation notes.
 2. For new features: create a design log first, get approval, then implement.
 3. Read related design logs to understand context and constraints.
 

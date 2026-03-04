@@ -24,16 +24,18 @@ CURSOR_DIR = ".cursor"
 RULES = "rules"
 COMMANDS = "commands"
 AGENTS = "agents"
+DESIGN_LOG_DIR = "design-log"
 SHARED_PACK = "_shared"
 # Alias: "all" or "rust" = all Rust packs
 ALL_RUST_PACKS = ["rust-design-review", "rust-implementation", "rust-testing", "rust-review"]
 DESIGN_LOG_README = """# Design Log
 
-Design decisions and implementation notes. Create new entries with:
+Design decisions and implementation notes live here as `NNN-short-name.md`.
+Create new entries with (from project root):
 
     python tools/new_design_log.py --slug <short-name>
 
-(Ensure the tools are available in your project or in this repo.)
+Default directory is `.cursor/design-log/`; use `--dir` to override.
 """
 
 
@@ -146,14 +148,14 @@ def copy_tools(repo_root: str, target: str, dry_run: bool) -> None:
     print("  Copied tools/ into target (run python tools/new_design_log.py from project root).")
 
 
-def ensure_design_log_readme(target: str, dry_run: bool) -> None:
-    """Create target/design-log/README.md if missing."""
-    log_dir = os.path.join(target, "design-log")
+def ensure_design_log_dir(target: str, dry_run: bool) -> None:
+    """Create target/.cursor/design-log/ and README.md if missing."""
+    log_dir = os.path.join(target, CURSOR_DIR, DESIGN_LOG_DIR)
     readme = os.path.join(log_dir, "README.md")
     if os.path.isfile(readme):
         return
     if dry_run:
-        print("[dry-run] would create design-log/README.md")
+        print(f"[dry-run] would create {CURSOR_DIR}/{DESIGN_LOG_DIR}/README.md")
         return
     os.makedirs(log_dir, exist_ok=True)
     with open(readme, "w", encoding="utf-8") as f:
@@ -225,7 +227,7 @@ def main() -> int:
         total_c += c
         total_a += a
 
-    ensure_design_log_readme(target, args.dry_run)
+    ensure_design_log_dir(target, args.dry_run)
 
     if args.with_tools:
         copy_tools(repo_root, target, args.dry_run)
@@ -247,11 +249,11 @@ def main() -> int:
             print(f"  Added: {total_r} rules, {total_c} commands, {total_a} agents")
         else:
             print("  (No new files; target already had these. Use --overwrite to replace.)")
-        print("  design-log/README.md created if missing.")
+        print(f"  {CURSOR_DIR}/{DESIGN_LOG_DIR}/ created if missing.")
         # Verify and list so user can confirm location
         cursor_dir = os.path.join(target, CURSOR_DIR)
         if os.path.isdir(cursor_dir):
-            for sub in (RULES, COMMANDS, AGENTS):
+            for sub in (RULES, COMMANDS, AGENTS, DESIGN_LOG_DIR):
                 subpath = os.path.join(cursor_dir, sub)
                 if os.path.isdir(subpath):
                     n = len([f for f in os.listdir(subpath) if os.path.isfile(os.path.join(subpath, f))])

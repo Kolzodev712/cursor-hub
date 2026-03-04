@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Create the next design log file in design-log/ with deterministic numbering.
-Usage: python tools/new_design_log.py --slug <short-name> [--dir design-log] [--title "Human readable"]
+Create the next design log file in .cursor/design-log/ with deterministic numbering.
+Usage: python tools/new_design_log.py --slug <short-name> [--dir .cursor/design-log] [--title "Human readable"]
 Prints the created file path on stdout. Exit non-zero on error.
 OS-independent; no external deps.
 """
@@ -13,7 +13,7 @@ import re
 import sys
 
 
-DEFAULT_DIR = "design-log"
+DEFAULT_DIR = ".cursor/design-log"
 TEMPLATE_HEADER = """# {title}
 
 ## Background
@@ -56,7 +56,7 @@ def find_next_number(log_dir: str) -> int:
 
 
 def ensure_readme(log_dir: str) -> None:
-    """Create design-log/README.md if missing."""
+    """Create README.md in log_dir if missing."""
     readme = os.path.join(log_dir, "README.md")
     if os.path.isfile(readme):
         return

@@ -3,7 +3,7 @@ description: "Design review quality bar: tradeoffs, alternatives, constraints, a
 alwaysApply: false
 globs:
   - "**/*.rs"
-  - "**/design-log/*.md"
+  - "**/.cursor/design-log/*.md"
 ---
 
 # Rust Design Review

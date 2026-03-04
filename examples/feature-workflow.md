@@ -20,7 +20,7 @@ Scenario: add a "config from env" feature to a Rust binary. Commands to use at e
 
 **2. Implement**
 
-- **`/rust-implementation__implement-module`** — *Implement design-log/001-config-from-env.md. Go phase by phase (types, then load, then wire into main).*  
+- **`/rust-implementation__implement-module`** — *Implement .cursor/design-log/001-config-from-env.md. Go phase by phase (types, then load, then wire into main).*  
   Agent will follow the log, run fmt/clippy/test after each phase, append Implementation Results.
 - **Strict API-first (hard gate):**  
   **`/rust-implementation__impl-gate`** — Agent refuses to write code until you provide types, error types, function signatures, and wiring; then implements only function bodies. Use when you want to own the API shape.
@@ -56,7 +56,7 @@ Scenario: add a "config from env" feature to a Rust binary. Commands to use at e
 | Design | `/rust-design-review__adr-new` or offer | slug + topic, or "yes" when offered |
 | Design (hard gate) | `/rust-design-review__design-gate` | provide full architecture; get BLOCKED + MISSING until complete, then PROPOSED PLAN |
 | Review design | `/rust-design-review__design-review` | describe the approach to review |
-| Implement | `/rust-implementation__implement-module` | design-log/NNN-name.md, phases |
+| Implement | `/rust-implementation__implement-module` | .cursor/design-log/NNN-name.md, phases |
 | Implement (hard gate) | `/rust-implementation__impl-gate` | provide types, signatures, wiring; then get implementation only |
 | Add tests | `/rust-testing__add-tests-only` | what to cover |
 | Test (hard gate) | `/rust-testing__test-gate` | provide full test breakdown; then get tests exactly as specified |

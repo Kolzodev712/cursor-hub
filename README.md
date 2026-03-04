@@ -6,7 +6,7 @@ A **public Cursor AI hub**: modular rules, commands, and agents for guiding AI a
 
 ## What's in the repo
 
-- **Packs** under `packs/cursor/`: each pack is a folder with `.cursor/rules/`, `.cursor/commands/`, and optionally `.cursor/agents/`. Install one or more packs into your project.
+- **Packs** under `packs/cursor/`: each pack is a folder with `.cursor/rules/`, `.cursor/commands/`, optionally `.cursor/agents/`. The installer also creates `.cursor/design-log/` in the target project for design logs. Install one or more packs into your project.
 - **Shared foundation** (`_shared`): design-log methodology and when-to-log guidance. It is always installed when you install any other pack.
 - **Tools** under `tools/`: install packs, validate pack layout, create design logs with deterministic numbering, and an optional export stub. They use the Python standard library only; no `pip install` needed (see `tools/requirements.txt`).
 
@@ -77,7 +77,7 @@ To create the next design log file **without guessing the number**:
 - **If you used `--with-tools`:** from your **project** root run:  
   `python tools/new_design_log.py --slug short-name`
 - **If you use the hub as a submodule:** from the hub root run:  
-  `python tools/new_design_log.py --slug short-name --dir /path/to/your/project/design-log`
+  `python tools/new_design_log.py --slug short-name --dir /path/to/your/project/.cursor/design-log`
 
 ## Validation
 
@@ -91,7 +91,7 @@ Checks that every pack has `pack.yml`, rules have valid frontmatter, commands fo
 
 ## Optional: export design logs
 
-`tools/export_design_logs_mongo.py` is a **stub**: it reads `design-log/*.md`, extracts metadata (number, slug, title, date), and prints JSON lines. A future version could push to MongoDB if `MONGO_URI` (and optionally `MONGO_DB`) are set; see the script docstring and [docs/pack-versioning.md](docs/pack-versioning.md) for compatibility notes.
+`tools/export_design_logs_mongo.py` is a **stub**: it reads `.cursor/design-log/*.md` (by default), extracts metadata (number, slug, title, date), and prints JSON lines. A future version could push to MongoDB if `MONGO_URI` (and optionally `MONGO_DB`) are set; see the script docstring and [docs/pack-versioning.md](docs/pack-versioning.md) for compatibility notes.
 
 ## Docs
 

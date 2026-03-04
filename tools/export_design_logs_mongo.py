@@ -47,7 +47,7 @@ def extract_metadata(content: str, filename: str) -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Export design log metadata to JSON lines (Mongo insert stub).")
-    parser.add_argument("--dir", default="design-log", help="Design log directory (default: design-log)")
+    parser.add_argument("--dir", default=".cursor/design-log", help="Design log directory (default: .cursor/design-log)")
     parser.add_argument("--output", default="-", help="Output file (default: stdout)")
     args = parser.parse_args()
 
