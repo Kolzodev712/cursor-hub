@@ -1,4 +1,4 @@
-# Test Gate (hard gate)
+# Test gate (Standalone — strict / dev-led)
 
 TESTING MODE (HARD GATE). You are **NOT** allowed to write any test code until the user provides a detailed test breakdown including:
 
@@ -18,3 +18,4 @@ TESTING MODE (HARD GATE). You are **NOT** allowed to write any test code until t
 3. You may **not** add extra tests unless the user explicitly asks. If you notice a missing test case, do **not** implement it; instead respond with "Suggested addition: [brief description]" and wait for the user's approval.
 4. **Scope of the gate:** After you deliver the tests, this gate no longer applies for this task unless the user invokes this command again.
 5. **ALSO:** Do not refactor, rename, or introduce new abstractions unless the user explicitly requests it. Keep changes minimal and localized.
+

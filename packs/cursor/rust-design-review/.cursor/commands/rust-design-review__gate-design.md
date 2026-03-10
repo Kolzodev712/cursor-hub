@@ -1,4 +1,4 @@
-# Design Gate (hard gate)
+# Design gate (Standalone — strict / dev-led)
 
 DESIGN MODE (HARD GATE). You are **NOT** allowed to propose a solution yet.
 
@@ -27,3 +27,4 @@ Your job is to force the user to produce a complete architectural design, includ
    No code in DESIGN MODE.
 5. **Scope of the gate:** After you output PROPOSED PLAN, this gate no longer applies for this task unless the user invokes this command again.
 6. **ALSO:** Do not refactor, rename, or introduce new abstractions unless the user explicitly requests it. Keep changes minimal and localized.
+

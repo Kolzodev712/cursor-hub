@@ -1,6 +1,6 @@
 # Using the packs day to day
 
-After you run `python tools/install.py all ../my-project` (or the Windows equivalent), your project has `.cursor/rules/`, `.cursor/commands/`, and `.cursor/agents/` full of files. Here's how that turns into "use the right behavior for the task."
+After you run `python tools/install.py all ../my-project` (or the Windows equivalent), your project has `.cursor/rules/`, `.cursor/commands/`, `.cursor/agents/`, `.cursor/design-log/`, and `.cursor/tools/`. Commands are used in one of two ways: **main workflow** (design, implement, test — use in any order or on their own; each pack has its own step numbers) or **standalone** (for a specific need).
 
 ---
 
@@ -9,65 +9,98 @@ After you run `python tools/install.py all ../my-project` (or the Windows equiva
 | Piece | What it does | How you "use" it |
 |-------|----------------|------------------|
 | **Rules** (`.mdc`) | Set guardrails and defaults (design log, question-first, Rust style, etc.). | **Automatic.** Cursor includes them in context. You don't pick them; they're always on (or apply when you have certain files open). |
-| **Commands** (slash `/`) | Define a concrete workflow for one task (e.g. "do a design review", "fix a bug with TDR"). | **You choose.** Type `/` in chat and pick the command that matches what you're doing. Commands are namespaced: e.g. `/rust-design-review__design-review`. |
-| **Agents** (`.md` in `agents/`) | Describe a **persona** (design critic, implementer, reviewer, test author). | **Indirect.** You get that behavior by running the **matching command** (or by saying "act as the design critic"). Commands are written so that running them *is* using that agent. |
+| **Commands** (slash `/`) | Define a concrete workflow for one task (e.g. "do a design review", "create design log", "implement from log"). | **You choose.** Type `/` in chat and pick the command. Commands are namespaced: e.g. `/rust-design-review__wf-1-design-review`. |
+| **Agents** (`.md` in `agents/`) | Describe a **persona** (design critic, implementer, reviewer, test author). | **Indirect.** You get that behavior by running the **matching command**. Commands are written so that running them *is* using that agent. |
 
-So you don't "manage" rules and agents by hand. You **choose the right command** for the task; the command plus the rules give you the right behavior (and the right "agent" in practice).
+So you don't "manage" rules and agents by hand. You **choose the right command** for the task; the command plus the rules give you the right behavior.
 
 ---
 
-## Task → command (what to run when)
+## Two ways to use commands
 
-Use **one command per task**. The command loads the workflow and, in effect, the right "agent" for that job.
+### 1. Main workflow (use in any order or on their own)
 
-| You want to… | Use this command | In practice |
-|--------------|------------------|-------------|
-| **Review a design / get critical questions** | `/rust-design-review__design-review` | Model follows the design-review steps and behaves like the design critic (challenge, alternatives, recommendation, verification). |
-| **Force design-first (hard gate)** | `/rust-design-review__design-gate` | Refuses to propose a solution until you provide complete architecture; responds with BLOCKED + MISSING + questions; then outputs PROPOSED PLAN only. |
-| **Start a new design log (ADR)** | `/rust-design-review__adr-new` | Creates a new log via the script and fills the template. |
-| **Summarise a decision** | `/rust-design-review__decision-summary` | Summarises chosen option and why alternatives were rejected. |
-| **Implement from an approved design log** | `/rust-implementation__implement-module` | Stepwise implementation, cites the log, runs verification; behaves like the rust-implementer. |
-| **Force API-first implementation (hard gate)** | `/rust-implementation__impl-gate` | Refuses to write code until you provide types, signatures, error types, and wiring; then implements only function bodies. |
-| **Refactor safely** | `/rust-implementation__refactor-safe` | 3–6 steps, tests after each step, no behavior change. |
-| **Fix a bug (test-first)** | `/rust-testing__bugfix-tdr` | Failing test first, then fix, then fmt/clippy/test. |
-| **Add tests only (no prod changes)** | `/rust-testing__add-tests-only` | Only tests/fixtures; justifies coverage. |
-| **Force test-plan-first (hard gate)** | `/rust-testing__test-gate` | Refuses to write test code until you provide full test breakdown; then implements tests exactly as specified. |
-| **Review a PR / diff** | `/rust-review__pr-review` | File-by-file, must-fix vs nice-to-have. |
-| **Scan for risky patterns** | `/rust-review__risky-changes-scan` | Flags unsafe, unwrap, panics, new deps, API breaks. |
+Each pack has its own step numbering. Use design review, implement, and/or add tests as needed — you are not forced to run all of them. **The design log is created or updated automatically** at the end of each command.
 
-So: **pick the task, then run the matching slash command.** You don't have to "manage" the .mdc or agent files; the commands are the lever.
+| Pack | Command | When to use it |
+|------|---------|----------------|
+| **rust-design-review** | `/rust-design-review__wf-1-design-review` | Get critical questions, alternatives, recommended option, risks, verification. Design log is created/updated automatically at the end. |
+| **rust-implementation** | `/rust-implementation__wf-1-implement-module` | Implement from the design log; stepwise; verification loop; Implementation Results appended automatically. |
+| **rust-testing** | `/rust-testing__wf-1-add-tests-only` | Add tests for new behavior. Test session recorded in the design log automatically. |
+
+**Manual design log:** To create a new log without running a workflow step, use `/design-log__create`. To record a step manually, use `/design-log__record-step`.
+
+The design log is the spine: each workflow command records into it automatically. You can run design, implement, or test on their own — no need to run all of them.
+
+### 2. Standalone commands (specific needs)
+
+Use when you have a **particular problem**, not the full design → implement → test flow.
+
+**Gates (strict / dev-led)** — You provide all inputs; the model refuses to propose solutions or write code until you do. Use when you want maximum control.
+
+| You want to… | Command |
+|--------------|---------|
+| Force design-first (you provide full architecture) | `/rust-design-review__gate-design` |
+| Force API-first implementation (you provide types/signatures/wiring) | `/rust-implementation__gate-impl` |
+| Force test-plan-first (you provide full test breakdown) | `/rust-testing__gate-test` |
+
+**Other standalone**
+
+| You want to… | Command |
+|--------------|---------|
+| Summarize a decision for a log/ADR | `/rust-design-review__standalone-decision-summary` |
+| Refactor safely (no behavior change) | `/rust-implementation__standalone-refactor-safe` |
+| Review a PR / diff | `/rust-review__standalone-pr-review` |
+| Scan for risky patterns | `/rust-review__standalone-risky-changes-scan` |
+| **Documentation** | |
+| Architecture doc (general) | `/documentation__standalone-architecture-doc` |
+| Feature doc (in-depth) | `/documentation__standalone-feature-doc` |
+| Workflow doc (general) | `/documentation__standalone-workflow-doc` |
+| Specific workflow doc (in-depth) | `/documentation__standalone-specific-workflow-doc` |
+| Bug summary | `/documentation__standalone-bug-summary` |
+
+So: **main workflow** = use design review, implement, and/or add tests in any order (each pack's step 1); **standalone** = pick the command that matches your immediate need (gates, refactor, review, etc.).
+
+---
+
+## Task → command (quick reference)
+
+| You want to… | Use this command |
+|--------------|------------------|
+| **Main flow** | Design: `/rust-design-review__wf-1-design-review` → Implement: `/rust-implementation__wf-1-implement-module` → Test: `/rust-testing__wf-1-add-tests-only`. Use in any order or on their own. Design log updated automatically after each. Manual log: `/design-log__create`. |
+| **Bugfix (separate)** | Small bug: `/rust-bugfix__standalone-fix-small-bug`. Non-trivial: wf-1-investigation → wf-2-proposed-solution → wf-3-resolution (`/rust-bugfix__wf-1-investigation`, etc.). |
+| **Standalone — gate** | `/rust-design-review__gate-design`, `/rust-implementation__gate-impl`, `/rust-testing__gate-test` |
+| **Standalone — other** | `/rust-design-review__standalone-decision-summary`, `/rust-implementation__standalone-refactor-safe`, `/rust-review__standalone-pr-review`, `/rust-review__standalone-risky-changes-scan`, `/documentation__standalone-*` (architecture, feature, workflow, specific workflow, bug summary) |
 
 ---
 
 ## Rules in the background
 
-- **design-log** (shared): "Design first, log decisions, use the script for new logs, when to log" — applies to the whole chat when relevant.
+- **design-log** (shared): "Design first, log decisions, use `.cursor/tools/new_design_log.py` for new logs, when to log" — applies to the whole chat when relevant.
+- **rust-bugfix**: When to use standalone fix vs 3-step workflow (only when that pack is installed).
 - **senior-teacher**: On "how would you approach…?" type questions, first reply is questions only (unless you say "just do it" / "draft now").
-- **rust-design-review**, **rust-core**, **rust-anti-footguns**, **rust-testing**, **rust-review**: Rust standards and checklists; some are always-on, some when you have `.rs` (or similar) in context.
+- **rust-design-review**, **rust-core**, **rust-anti-footguns**, **rust-testing**, **rust-review**: Rust standards and checklists; some always-on, some when `.rs` (or similar) is in context.
 
-You don't turn these on/off per task. They're part of the environment. If you want a *task-specific* behavior, use the **command** for that task.
+You don't turn these on/off per task. They're part of the environment. Use the **command** for the task.
 
 ---
 
 ## Agents = "who" for that command
 
-Each command is written so that running it gets you the right "agent" behavior:
+- **Structured:** wf-1-design-review → **design critic**; wf-1-implement-module → **rust-implementer**; wf-1-add-tests-only → **test author**. Design log recording is automatic (design-log pack). **Bugfix (separate flow):** standalone-fix-small-bug or wf-1/wf-2/wf-3 → **rust-bugfix**.
+- **Standalone gates:** gate-design, gate-impl, gate-test → same agents with strict refusal until you provide inputs.
+- **Standalone other:** standalone-refactor-safe → rust-implementer; standalone-pr-review, standalone-risky-changes-scan → **reviewer**; standalone-decision-summary → design critic; documentation commands → **documentation**.
 
-- `/rust-design-review__design-review`, `/rust-design-review__design-gate` → **design critic** (skeptical, challenges assumptions; design-gate adds a hard refusal until architecture is complete).
-- `/rust-implementation__implement-module`, `/rust-implementation__impl-gate`, `/rust-implementation__refactor-safe` → **rust-implementer** (small diffs, verification loop; impl-gate adds refusal until types/signatures/wiring are provided).
-- `/rust-testing__bugfix-tdr`, `/rust-testing__add-tests-only`, `/rust-testing__test-gate` → **test author** (reproducible tests, no coverage theater; test-gate adds refusal until full test breakdown is provided).
-- `/rust-review__pr-review`, `/rust-review__risky-changes-scan` → **reviewer** (correctness, must-fix vs nice-to-have).
-
-So: **use the command for the task; the agent is built into that command.** If Cursor later adds an explicit "choose agent" UI, the same agent files can back that; until then, commands are how you "use" the right agent.
+Use the command for the task; the agent is built into that command.
 
 ---
 
-## Simple workflow
+## Simple workflow (main flow)
 
-1. **Design / approach:** Ask in chat ("how would you add X?"). Senior-teacher rule gives questions first; when you're ready, run `/rust-design-review__adr-new` to create a log or `/rust-design-review__design-review` for a one-off review.
-2. **Implement:** Run `/rust-implementation__implement-module` and tell it which design log; it will implement stepwise and run verification.
-3. **Bugfix:** Run `/rust-testing__bugfix-tdr` and describe the bug; it will add a failing test, fix, then verify.
-4. **Review:** Run `/rust-review__pr-review` on the files or diff; use `/rust-review__risky-changes-scan` for a quick risk check.
-5. **Tests only:** Run `/rust-testing__add-tests-only` and say what you want covered.
+1. **Design:** Run `/rust-design-review__wf-1-design-review` and describe the problem; get questions, alternatives, recommendation. The design log is created or updated automatically at the end.
+2. **Implement:** Run `/rust-implementation__wf-1-implement-module` and point to the design log; it implements stepwise and runs verification. Implementation Results are appended automatically.
+3. **Test:** Run `/rust-testing__wf-1-add-tests-only` for coverage. Test session is recorded in the design log automatically.
+4. **Bugfix (separate flow):** For a small bug use `/rust-bugfix__standalone-fix-small-bug`. For a non-trivial bug use the 3-step workflow: `/rust-bugfix__wf-1-investigation` → `/rust-bugfix__wf-2-proposed-solution` → `/rust-bugfix__wf-3-resolution` (each step records in the design log).
+5. **Review (optional):** Run `/rust-review__standalone-pr-review` or `/rust-review__standalone-risky-changes-scan` on the changes.
 
-You're not "managing" rules or agents; you're **choosing the right command** for the job. The rules and agent personas support those commands.
+To create a design log manually (without running a workflow step): `/design-log__create`. You can run design, implement, or test on their own — no need to run all of them.

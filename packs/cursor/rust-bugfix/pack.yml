@@ -1,0 +1,3 @@
+name: rust-bugfix
+description: Bugfix pack — standalone fix for small bugs, or 3-step workflow (investigation → proposed solution → resolution). Separate from the main design-review/implement/test flow; uses its own design logs.
+version: "0.2.0"

@@ -15,8 +15,8 @@ Thanks for considering contributing. This document explains how to propose chang
 
 - **Pack structure:** Every pack under `packs/cursor/` has a `pack.yml`. Non–`_shared` packs have `.cursor/rules/`, `.cursor/commands/`, and optionally `.cursor/agents/`.
 - **Rules:** `.mdc` files have valid YAML frontmatter with at least a `description` field.
-- **Commands:** Command files are named `{pack-name}__{command-name}.md` (e.g. `rust-design-review__design-review.md`) so that installing multiple packs does not produce name collisions. Validator enforces this.
-- **Pack version:** `pack.yml` may include a `version` (e.g. `0.1.0`). The installer prints installed pack versions when present.
+- **Commands:** Command files are named `{pack-name}__{command-name}.md` (e.g. `rust-design-review__wf-1-design-review.md`) so that installing multiple packs does not produce name collisions. Validator enforces this.
+- **Pack version:** `pack.yml` may include a `version` (e.g. `0.2.0`). The installer prints installed pack versions when present.
 
 ## Pull requests
 
@@ -39,7 +39,7 @@ Thanks for considering contributing. This document explains how to propose chang
 ## Adding a new command
 
 - Add a file `.cursor/commands/{pack-name}__{command-name}.md` in the pack.
-- The filename (without `.md`) is the slash command users will see (e.g. `/rust-design-review__adr-new`).
+- The filename (without `.md`) is the slash command users will see (e.g. `/design-log__create`).
 - Keep the content focused on one workflow; include verification steps where the command changes code.
 - Update CATALOG.md and any relevant docs (e.g. [docs/using-packs.md](docs/using-packs.md)).
 

@@ -5,14 +5,16 @@ alwaysApply: true
 
 # Design Log Methodology
 
+**CRITICAL — Location.** Create design log files **only** in the designated directory: `./.cursor/design-log/`. Never create `NNN-something.md` in the project root, in `design-log/` at the root, or anywhere else. If `.cursor/design-log/` does not exist, create it (and a README there) before creating the first log.
+
 The project follows a design-log methodology. Logs live in `./.cursor/design-log/` as `NNN-short-name.md` (e.g. `001-risk-cache.md`).
 
 **CRITICAL — Design log numbering.**
 
 Before creating **any** new file like `NNN-something.md` in `./.cursor/design-log/`:
 
-1. **Preferred:** Run `python tools/new_design_log.py --slug <short-name>` (from the project root). The script defaults to `.cursor/design-log/` and prints the created file path. Use that path; do not guess NNN.
-2. **Fallback:** Only if the script is unavailable (e.g. tools not installed), list the directory `./.cursor/design-log/` in this response (e.g. `ls ./.cursor/design-log` or equivalent), find all files matching `NNN-*.md`, take the maximum NNN, and use next number = max + 1 (or **001** if none exist). Then create the file with that number.
+1. **Preferred:** Run `python .cursor/tools/new_design_log.py --slug <short-name>` (from the project root). The script defaults to `.cursor/design-log/` and prints the created file path. Use that path; do not guess NNN.
+2. **Fallback:** Only if the script is unavailable (e.g. `.cursor/tools/` not installed), list the directory `./.cursor/design-log/` in this response (e.g. `ls ./.cursor/design-log` or equivalent), find all files matching `NNN-*.md`, take the maximum NNN, and use next number = max + 1 (or **001** if none exist). Then create the file with that number.
 
 **Never** use 002, 003, etc. from memory or from earlier in the chat. Prefer the helper script; otherwise always derive the number from a fresh directory listing in the same response where you create the file.
 
@@ -30,7 +32,7 @@ Do **not** create a design log for: trivial one-file edits (e.g. adding a single
 
 ## Offering a design log
 
-When you are about to start design or implementation that **meets** the "create a design log" criteria (multi-step, multi-file, architectural, etc.) and does **not** fall under "do not create" (trivial one-file, single function, etc.), **ask the user once:** "Do you want this recorded in a design log? If yes, I'll create one (e.g. slug: my-feature)." If they say yes (or confirm), run `python tools/new_design_log.py --slug <slug>` and fill the template; do not require them to run /rust-design-review__adr-new. If they say no or ignore the question, proceed without creating a log. The **/rust-design-review__adr-new** command remains for when the user explicitly wants to create a log without being asked (e.g. from the slash menu).
+When you are about to start design or implementation that **meets** the "create a design log" criteria (multi-step, multi-file, architectural, etc.) and does **not** fall under "do not create" (trivial one-file, single function, etc.), **ask the user once:** "Do you want this recorded in a design log? If yes, I'll create one (e.g. slug: my-feature)." If they say yes (or confirm), run `python .cursor/tools/new_design_log.py --slug <slug>` and fill the template; do not require them to run /design-log__create. If they say no or ignore the question, proceed without creating a log. The **/design-log__create** command remains for when the user explicitly wants to create a log without being asked (e.g. from the slash menu).
 
 Do **not** create or write a design log in your first response. Follow the Senior Teacher rule (if installed): first response = questions and challenge only. Create the design log only in a later response, after the user has answered or asked you to draft it.
 

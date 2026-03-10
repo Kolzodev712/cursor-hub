@@ -1,4 +1,4 @@
-# Refactor Safe
+# Refactor safe (Standalone)
 
 Plan 3–6 steps; limit files per step; run tests after each step; stop and show a short diff summary between steps.
 
@@ -14,3 +14,4 @@ Plan 3–6 steps; limit files per step; run tests after each step; stop and show
 4. **Final check:** Run full verification: `cargo fmt --all -- --check` (then `cargo fmt --all` if needed), `cargo clippy --fix --allow-dirty --all-targets --all-features -- -D warnings`, `cargo test --all-features`. Summarize the refactor outcome.
 
 Do not change behavior; refactor only structure, naming, or duplication. If behavior changes are required, call that out and get explicit approval.
+

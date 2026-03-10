@@ -1,0 +1,39 @@
+---
+description: "After a workflow step: create or append design log (Design discussion, Implementation Results, Test session; or Bugfix workflow: Investigation, Proposed solution, Resolution)"
+alwaysApply: false
+globs: []
+---
+
+# Design log — record after workflow steps
+
+**Reference only.** This rule is not auto-applied (`alwaysApply: false`, no globs). Workflow commands inline the recording and verification steps; use this file as pack documentation and section-format reference.
+
+When a **workflow command** completes, you **must** record that step in the design log. Do not skip this; do not ask "should I create a log?" — do it as part of the same response.
+
+**Main workflow commands:** wf-1-design-review, wf-1-implement-module, wf-1-add-tests-only (rust-design-review, rust-implementation, rust-testing).  
+**Bugfix workflow commands (separate flow):** wf-1-investigation, wf-2-proposed-solution, wf-3-resolution (rust-bugfix).
+
+**Location:** All design log files live in `./.cursor/design-log/` as `NNN-slug.md`. Create new files only there.
+
+## How to record
+
+1. **If a design log already exists for this workstream** (user cited it, or you created/used one earlier in this conversation): **append** a new section to that file. Use the section format below for the step type.
+2. **If no design log exists:** Run `python .cursor/tools/new_design_log.py --slug <short-name>` from the project root (or use fallback: list `./.cursor/design-log/`, take max NNN + 1, create `NNN-<slug>.md`). Fill the template with the content for this step; add the section that matches the step type. Use a short kebab-case slug (e.g. `config-env`, `auth-refactor`, `bugfix-xyz`).
+
+## Section formats (append or fill)
+
+**Main workflow (design → implement → test):**
+- **Design discussion** (after wf-1-design-review): Recommended option, Risks, Verification steps. Optionally Background, Problem, Trade-offs if this is the first content.
+- **Implementation Results** (after wf-1-implement-module): What was done; deviations from the plan; test/verification outcome (e.g. "all tests pass").
+- **Test session** (after wf-1-add-tests-only): What was covered (e.g. edge cases, fixtures); how tests were run; any failures fixed.
+
+**Bugfix workflow (separate; use dedicated log e.g. bugfix-<name>):**
+- **Investigation** (after rust-bugfix wf-1): Reproduction steps, evidence, scope, hypotheses. Do not propose the fix yet.
+- **Proposed solution** / **Trade-offs** (after rust-bugfix wf-2): Approach, alternatives considered, trade-offs, verification plan.
+- **Resolution** (after rust-bugfix wf-3): What was done, tests added or run, verification outcome.
+
+Keep each section concise (a few sentences to a short paragraph). Use the same template structure as the main design-log rule (Background, Problem, Design, etc.) when **creating** a new file; when **appending**, add only the relevant section heading and content.
+
+## Numbering (new files only)
+
+Prefer `python .cursor/tools/new_design_log.py --slug <slug>`. If the script is unavailable, list `./.cursor/design-log/`, find max NNN from `NNN-*.md`, use next number (or 001 if empty). Never guess NNN from memory.

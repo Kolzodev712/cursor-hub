@@ -1,4 +1,4 @@
-# Risky Changes Scan
+# Risky changes scan (Standalone)
 
 Flag risky patterns: unsafe, unwrap, panics, new deps, public API breaks.
 
@@ -13,3 +13,4 @@ Flag risky patterns: unsafe, unwrap, panics, new deps, public API breaks.
 2. **Report:** For each category, list occurrences with file/line or a short reference. Summarize overall risk (low / medium / high) and recommend follow-up (e.g. "add invariant comment", "replace unwrap with ?", "document breaking change in changelog").
 
 Do not fix the code in this command unless the user asks; focus on identification and prioritization.
+

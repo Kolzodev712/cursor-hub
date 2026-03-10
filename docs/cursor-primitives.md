@@ -10,15 +10,15 @@ Brief reference for how this hub uses Cursor’s building blocks.
 
 ## Commands (`.cursor/commands/*.md`)
 
-- **What:** Slash-triggered workflows (e.g. `/rust-design-review__design-review`, `/rust-review__pr-review`). Stored as Markdown.
+- **What:** Slash-triggered workflows (e.g. `/rust-design-review__wf-1-design-review`, `/rust-review__standalone-pr-review`, `/documentation__standalone-architecture-doc`). Stored as Markdown.
 - **When:** User types `/` and picks a command; the command content is used as instructions for that turn.
-- **Use:** Multi-step workflows (review, create ADR, TDR, refactor-safe). Make the steps explicit and, where relevant, require verification (e.g. “run cargo test”).
+- **Use:** Multi-step workflows (design review, implement from log, add tests, bugfix, refactor-safe, PR review, documentation). Make the steps explicit and, where relevant, require verification (e.g. run cargo test, run the design-log validator).
 
-## Subagents (`.cursor/agents/*.md`)
+## Agents (`.cursor/agents/*.md`)
 
-- **What:** Specialized agent personas. Each file describes behavior and scope for a subagent.
-- **When:** User or flow delegates to a subagent (e.g. “use the design critic”).
-- **Use:** Focused roles (design critic, implementer, reviewer, test author) so the main agent can hand off to a consistent personality and checklist.
+- **What:** Specialized agent personas. Each file describes behavior and scope for an agent.
+- **When:** User or flow runs a command that embodies that agent (e.g. design critic, implementer, reviewer).
+- **Use:** Focused roles (design critic, implementer, reviewer, test author, documentation) so the right checklist and tone apply when you run the matching command.
 
 ## Hooks
 

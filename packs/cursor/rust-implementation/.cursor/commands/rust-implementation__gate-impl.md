@@ -1,4 +1,4 @@
-# Implementation Gate (hard gate)
+# Implementation gate (Standalone — strict / dev-led)
 
 IMPLEMENTATION MODE (HARD GATE). You are **NOT** allowed to write any code until the user provides **all** of the following:
 
@@ -20,3 +20,4 @@ IMPLEMENTATION MODE (HARD GATE). You are **NOT** allowed to write any code until
    - Wait for the user's approval. If they approve, treat the updated shape as the new gate and proceed.
 4. **Scope of the gate:** After you deliver the implementation (function bodies), this gate no longer applies for this task unless the user invokes this command again.
 5. **ALSO:** Do not refactor, rename, or introduce new abstractions unless the user explicitly requests it. Keep changes minimal and localized.
+

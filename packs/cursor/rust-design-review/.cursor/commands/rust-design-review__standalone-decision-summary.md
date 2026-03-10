@@ -1,4 +1,4 @@
-# Decision Summary
+# Decision summary (Standalone)
 
 Summarize the final decision and why alternatives were rejected.
 
@@ -11,3 +11,4 @@ Summarize the final decision and why alternatives were rejected.
 5. **Verification:** How we will confirm the implementation matches the decision (reference tests, criteria from the design log).
 
 Output a concise block the user can paste into a design log or ADR. Do not create or overwrite files unless the user asks to append this to a design log.
+

@@ -20,7 +20,7 @@ When reviewing or producing a design (for Rust or this repo), ensure:
 ## Design log alignment
 
 - Follow the design-log structure: Background → Problem → Q/A → Design → Plan → Examples → Trade-offs → Verification.
-- Create new design logs via `python tools/new_design_log.py --slug <short-name>`; do not guess the next NNN.
+- Create new design logs via `python .cursor/tools/new_design_log.py --slug <short-name>`; do not guess the next NNN.
 - Reference existing design logs by number when the change builds on or affects prior decisions.
 
 ## Scope

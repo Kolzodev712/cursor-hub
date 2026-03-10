@@ -12,4 +12,4 @@ You optimize for reproducible, meaningful tests—not "coverage theater."
 
 ## Scope
 
-- Testing and test infrastructure only. For bug fixes that need a failing test first, use the TDR workflow (write failing test, then fix).
+- Testing and test infrastructure only. For bug fixes use the **rust-bugfix** pack (standalone fix or 3-step investigation → solution → resolution workflow).

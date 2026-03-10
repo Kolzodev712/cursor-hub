@@ -6,8 +6,7 @@ Always includes _shared. Put the target directory last.
 Usage:
   python tools/install.py [options] <pack> [pack ...] <target_dir>
   python tools/install.py all ../my-project          # Unix
-  python tools/install.py all ..\\my-project          # Windows
-  python tools/install.py rust-design-review ../my-project --with-tools
+  python tools/install.py rust-design-review ../my-project
 
 Use "all" to install every Rust pack. Target is the last argument.
 """
@@ -24,18 +23,19 @@ CURSOR_DIR = ".cursor"
 RULES = "rules"
 COMMANDS = "commands"
 AGENTS = "agents"
+TOOLS_DIR = "tools"
 DESIGN_LOG_DIR = "design-log"
 SHARED_PACK = "_shared"
 # Alias: "all" or "rust" = all Rust packs
-ALL_RUST_PACKS = ["rust-design-review", "rust-implementation", "rust-testing", "rust-review"]
+ALL_RUST_PACKS = ["design-log", "rust-design-review", "rust-implementation", "rust-testing", "rust-bugfix", "rust-review", "documentation"]
 DESIGN_LOG_README = """# Design Log
 
 Design decisions and implementation notes live here as `NNN-short-name.md`.
-Create new entries with (from project root):
+Create new entries from the project root:
 
-    python tools/new_design_log.py --slug <short-name>
+    python .cursor/tools/new_design_log.py --slug <short-name>
 
-Default directory is `.cursor/design-log/`; use `--dir` to override.
+Use `--dir` to target a different directory (e.g. another repo).
 """
 
 
@@ -134,18 +134,19 @@ def read_pack_version(pack_dir: str) -> str | None:
 
 
 def copy_tools(repo_root: str, target: str, dry_run: bool) -> None:
-    """Copy tools/ from hub into target project so user can run new_design_log.py etc. from project root."""
+    """Copy hub tools/ into target/.cursor/tools/ so scripts run from .cursor/tools in any repo."""
     src = os.path.join(repo_root, "tools")
-    dst = os.path.join(target, "tools")
+    dst = os.path.join(target, CURSOR_DIR, TOOLS_DIR)
     if not os.path.isdir(src):
         return
     if dry_run:
-        print("[dry-run] would copy tools/ into target")
+        print(f"[dry-run] would copy tools/ into {CURSOR_DIR}/{TOOLS_DIR}/")
         return
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
     if os.path.isdir(dst):
         shutil.rmtree(dst)
     shutil.copytree(src, dst, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
-    print("  Copied tools/ into target (run python tools/new_design_log.py from project root).")
+    print(f"  Copied tools into {CURSOR_DIR}/{TOOLS_DIR}/ (run from project root: python {CURSOR_DIR}/{TOOLS_DIR}/new_design_log.py --slug <name>).")
 
 
 def ensure_design_log_dir(target: str, dry_run: bool) -> None:
@@ -166,7 +167,6 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Install Cursor packs into a target project.")
     parser.add_argument("--dry-run", action="store_true", help="Print what would be done without writing")
     parser.add_argument("--overwrite", action="store_true", help="Overwrite existing rule/command/agent files")
-    parser.add_argument("--with-tools", action="store_true", help="Copy tools/ into target so you can run new_design_log.py from project root")
     parser.add_argument("--target", "-t", metavar="DIR", help="Target project directory (else last arg is target)")
     parser.add_argument("packs", nargs="+", help="Pack name(s) then target dir as last arg. Use 'all' for all Rust packs.")
     args = parser.parse_args()
@@ -229,8 +229,7 @@ def main() -> int:
 
     ensure_design_log_dir(target, args.dry_run)
 
-    if args.with_tools:
-        copy_tools(repo_root, target, args.dry_run)
+    copy_tools(repo_root, target, args.dry_run)
 
     if args.dry_run:
         print("Dry run complete. No files written.")
@@ -253,7 +252,7 @@ def main() -> int:
         # Verify and list so user can confirm location
         cursor_dir = os.path.join(target, CURSOR_DIR)
         if os.path.isdir(cursor_dir):
-            for sub in (RULES, COMMANDS, AGENTS, DESIGN_LOG_DIR):
+            for sub in (RULES, COMMANDS, AGENTS, DESIGN_LOG_DIR, TOOLS_DIR):
                 subpath = os.path.join(cursor_dir, sub)
                 if os.path.isdir(subpath):
                     n = len([f for f in os.listdir(subpath) if os.path.isfile(os.path.join(subpath, f))])

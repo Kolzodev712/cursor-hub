@@ -1,0 +1,3 @@
+name: documentation
+description: Documentation pack — standalone commands to create architecture docs, feature docs, workflow docs, and bug summaries.
+version: "0.2.0"

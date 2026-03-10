@@ -1,4 +1,4 @@
-# PR Review
+# PR review (Standalone)
 
 File-by-file review with "must-fix" vs "nice-to-have" findings.
 
@@ -17,3 +17,4 @@ File-by-file review with "must-fix" vs "nice-to-have" findings.
 4. **Summary:** List must-fix items first, then nice-to-have. Suggest concrete changes where helpful.
 
 Keep the review actionable. Quote file/line or snippet when referring to a finding.
+
