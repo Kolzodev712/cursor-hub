@@ -1,0 +1,16 @@
+---
+description: "For new rules, commands, or design-log sections: present full draft and wait for approval before writing files"
+alwaysApply: true
+---
+
+# Present before writing (hub / meta-artifacts)
+
+When creating or editing **generated hub artifacts** — new rules, new commands, or new design-log sections beyond the standard template — do **not** write files immediately.
+
+1. **Present the full draft** in your response (e.g. the complete rule text, command text, or design-log section).
+2. **Wait for explicit user approval** (e.g. "yes", "looks good", "write it").
+3. **Only then** create or overwrite the file(s).
+
+This applies when working on the cursor-hub repo itself (e.g. adding a pack, a rule, or a slash command). It does not apply to normal implementation work in a user project guided by existing design logs and commands.
+
+Where relevant, workflow commands and design-log methodology should remind the model of this when the task involves creating a new rule or appending a new kind of content to a log.

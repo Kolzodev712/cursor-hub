@@ -44,3 +44,80 @@ globs:             # only if file-scoped
 ```
 
 Keep the description to one line so the rule picker stays readable.
+
+## Rule templates
+
+Copy-paste and adapt these templates. Naming for language-scoped rules: `{language}-{concern}.mdc` (e.g. `rust-error-handling.mdc`, `rust-testing.mdc`).
+
+### Always-on rule (alwaysApply: true)
+
+Use sparingly; prefer file-scoped rules to limit token cost.
+
+```yaml
+---
+description: "One-line description for the rule picker"
+alwaysApply: true
+---
+
+# Rule title
+
+- **Principle one:** Short instruction. Optional good/bad example.
+- **Principle two:** Keep each bullet focused; long procedures belong in commands.
+```
+
+### File-scoped rule (globs)
+
+Use for language- or path-specific guidance.
+
+```yaml
+---
+description: "One-line description for the rule picker"
+alwaysApply: false
+globs:
+  - "**/*.rs"
+  - "**/Cargo.toml"
+---
+
+# Rule title
+
+- **Do:** Preferred pattern with brief example.
+- **Avoid:** Anti-pattern; use X instead.
+- Keep under ~50 lines; split into multiple rules if needed.
+```
+
+### Example: testing rule
+
+```yaml
+---
+description: "Testing philosophy: unit vs integration, deterministic, fixtures"
+alwaysApply: false
+globs:
+  - "**/*.rs"
+  - "**/tests/**/*.rs"
+---
+
+# Testing
+
+- **Unit vs integration:** Use unit tests for pure logic; integration for I/O and cross-module.
+- **Deterministic:** No wall clock or unseeded randomness; use mocks for I/O.
+- **Fixtures:** Shared setup; avoid duplicating large setup across tests.
+```
+
+### Example: API rule
+
+```yaml
+---
+description: "Public API design: stability, visibility, documentation"
+alwaysApply: false
+globs:
+  - "**/src/lib.rs"
+  - "**/src/**/public*.rs"
+---
+
+# API design
+
+- **Stability:** Prefer non-breaking changes; document semver expectations.
+- **Visibility:** Expose only what callers need; keep internals in crate-private or pub(crate).
+- **Docs:** Public items must have doc comments; include examples for non-obvious APIs.
+```
+

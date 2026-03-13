@@ -129,12 +129,29 @@ def main() -> int:
     cursor_root = os.path.join(root, "cursor")
     if not os.path.isdir(cursor_root):
         cursor_root = root
-    all_errors = []
-    for name in sorted(os.listdir(cursor_root)):
-        pack_path = os.path.join(cursor_root, name)
-        if not os.path.isdir(pack_path) or name.startswith("."):
-            continue
-        all_errors.extend(validate_pack(pack_path, name))
+
+    all_errors: list[str] = []
+    # Recurse under cursor_root: any directory containing pack.yml is treated as a pack root.
+    for dirpath, dirnames, filenames in os.walk(cursor_root):
+        # Skip hidden directories
+        dirnames[:] = [d for d in dirnames if not d.startswith(".")]
+        if PACK_YML in filenames:
+            pack_path = dirpath
+            pack_name = os.path.basename(pack_path)
+            # Prefer explicit name: field in pack.yml when present
+            pack_yml = os.path.join(pack_path, PACK_YML)
+            try:
+                with open(pack_yml, "r", encoding="utf-8") as f:
+                    for raw in f:
+                        line = raw.strip()
+                        if line.startswith("name:") and ":" in line:
+                            val = line.split(":", 1)[1].strip().strip("'\"")
+                            if val:
+                                pack_name = val
+                            break
+            except OSError:
+                pass
+            all_errors.extend(validate_pack(pack_path, pack_name))
 
     if all_errors:
         for e in all_errors:

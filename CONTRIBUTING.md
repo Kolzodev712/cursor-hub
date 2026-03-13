@@ -41,6 +41,7 @@ Thanks for considering contributing. This document explains how to propose chang
 - Add a file `.cursor/commands/{pack-name}__{command-name}.md` in the pack.
 - The filename (without `.md`) is the slash command users will see (e.g. `/design-log__create`).
 - Keep the content focused on one workflow; include verification steps where the command changes code.
+- When proposing new rules or commands (e.g. via a PR or with AI assistance), present the full draft for approval before writing; see [AGENTS.md](AGENTS.md).
 - Update CATALOG.md and any relevant docs (e.g. [docs/using-packs.md](docs/using-packs.md)).
 
 ## License

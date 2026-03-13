@@ -4,7 +4,7 @@ A **public Cursor AI hub**: modular rules, commands, and agents for guiding AI a
 
 ## What's in the repo
 
-- **Packs** under `packs/cursor/`: each pack is a folder with `.cursor/rules/`, `.cursor/commands/`, optionally `.cursor/agents/`. The installer also creates `.cursor/design-log/` and copies scripts into `.cursor/tools/` in the target project. Install one or more packs into your project.
+- **Packs** under `packs/cursor/`: language-specific packs live in folders like `packs/cursor/rust/design-review`, `packs/cursor/rust/implementation`, etc., plus shared packs like `design-log`, `documentation`, `security`. Each pack has a `pack.yml` and optional `.cursor/rules/`, `.cursor/commands/`, `.cursor/agents/`. The installer also creates `.cursor/design-log/` and copies scripts into `.cursor/tools/` in the target project. Install one or more packs into your project.
 - **Tools** under `tools/`: install script, validate pack layout, new_design_log script, and an optional export stub. When you install packs, these are copied into the target's `.cursor/tools/` so they work from any repo. No `pip install` needed (see `tools/requirements.txt`).
 
 - **Shared foundation** (`_shared`): design-log methodology and when-to-log guidance. It is always installed when you install any other pack.
@@ -58,6 +58,7 @@ python tools/install.py rust-design-review rust-implementation ..\my-project
 | **rust-bugfix** | Fix small bugs (standalone) or non-trivial bugs (3-step workflow: investigation → proposed solution → resolution). Separate from main design/implement/test flow. |
 | **documentation** | Standalone commands to create architecture docs, feature docs, workflow docs, and bug summaries. |
 | **rust-review** | PR review checklist, risky-changes scan (unsafe, unwrap, new deps, API breaks). |
+| **security** | Security audit agent and `/security__standalone-audit`: vulnerabilities, deps, secrets, auth, crypto, misconfiguration, CI/CD. |
 
 You can install multiple packs; they merge into a single `.cursor/`. Commands are namespaced by pack (e.g. `/rust-design-review__wf-1-design-review`). Use the **main workflow** (design, implement, test) in any order or on their own — each pack numbers its own steps (e.g. wf-1). **Standalone** commands: gates, refactor, PR review, etc. See [CATALOG.md](CATALOG.md) for the full list.
 
@@ -88,12 +89,25 @@ Checks that every pack has `pack.yml`, rules have valid frontmatter, commands fo
 
 ## Docs
 
+## Languages
+
+- Language profiles live under `packs/cursor/languages/<lang>/manifest.yml`.
+- Shared packs (e.g. `design-log`, `documentation`, `security`) are referenced from each manifest.
+- Rust-specific packs live under `packs/cursor/rust/` (e.g. `design-review`, `implementation`, `testing`, `bugfix`, `review`).
+
+
 - [examples/feature-workflow.md](examples/feature-workflow.md) — Main workflow and standalone commands with examples.
 - [docs/using-packs.md](docs/using-packs.md) — How to use commands: main workflow vs standalone.
 - [CATALOG.md](CATALOG.md) — All packs and commands.
-- [docs/cursor-primitives.md](docs/cursor-primitives.md) — Rules vs commands vs agents.
-- [docs/authoring-guidelines.md](docs/authoring-guidelines.md) — Sizing and writing commands (including command naming).
+- [docs/cursor-primitives.md](docs/cursor-primitives.md) — Rules vs commands vs agents (with comparison table).
+- [docs/authoring-guidelines.md](docs/authoring-guidelines.md) — Sizing, naming, rule templates, and frontmatter.
+- [docs/command-authoring-examples.md](docs/command-authoring-examples.md) — Command template and 2–3 full examples for pack authors.
 - [docs/pack-versioning.md](docs/pack-versioning.md) — Versioning and compatibility.
+
+## Meta / authoring
+
+- **[AGENTS.md](AGENTS.md)** — Contract for contributors and agents working on the hub: purpose, where packs/commands/rules live, present drafts for approval.
+- **Generate-* skills:** The hub can support authoring via Cursor skills (e.g. generate-rules, generate-commands) that follow the same workflow: gather requirements → draft → present → write after approval. Skills may live in the hub repo (for maintainers) or in an optional meta pack that installs into a project’s `.cursor/skills/`. If adopted, ensure skills use the hub’s paths and naming (`.cursor/design-log/`, pack names). See [AGENTS.md](AGENTS.md) and the present-before-writing rule in `_shared`.
 
 ## License
 

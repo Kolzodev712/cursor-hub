@@ -1,0 +1,3 @@
+name: languages
+description: Language manifests (rust, python, js-ts, terraform) defining which packs each language profile installs.
+

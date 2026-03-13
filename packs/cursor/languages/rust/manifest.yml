@@ -1,0 +1,11 @@
+shared_packs:
+  - design-log
+  - documentation
+  - security
+language_packs:
+  - rust-design-review
+  - rust-implementation
+  - rust-testing
+  - rust-bugfix
+  - rust-review
+

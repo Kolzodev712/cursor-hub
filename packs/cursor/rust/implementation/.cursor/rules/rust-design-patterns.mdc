@@ -1,0 +1,16 @@
+---
+description: "Rust design patterns: iterators, newtype, extension traits, non_exhaustive, Result-Option"
+alwaysApply: false
+globs:
+  - "**/*.rs"
+---
+
+# Rust Design Patterns
+
+- **Iterators:** Prefer iterator chains over manual loops when they improve clarity. Use `.filter()`, `.map()`, `.filter_map()`; avoid collecting unnecessarily (e.g. use `.next()` or `.find()` instead of `.collect()` then index). Prefer `impl Iterator` in APIs when the type is not part of the contract.
+- **Newtype:** Use newtype wrappers to enforce units or invariants (e.g. `struct UserId(u64)`) and to implement traits without touching the inner type. Derive `Debug`, `Copy`/`Clone` as appropriate.
+- **Extension traits:** For adding methods to foreign or standard types without modifying them, use an extension trait in a dedicated module (e.g. `trait FooExt { fn bar(&self); }` + `impl FooExt for Foo { ... }`). Keep the trait and impl in one place.
+- **non_exhaustive:** Use `#[non_exhaustive]` on enums or structs that may gain variants or fields in the future to allow backward-compatible evolution.
+- **Result and Option:** Prefer `Result<Option<T>, E>` when "absent" and "error" are both possible (e.g. lookup that can fail or return none). Use `Option<Result<T, E>>` only when "optional computation that may fail" is the right model. Combine with `?` and `.transpose()` as needed.
+
+Good: `fn get_user(id: UserId) -> Result<Option<User>, DbError>`. Avoid: returning raw `Option` when the operation can fail.

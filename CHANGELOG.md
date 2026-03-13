@@ -11,6 +11,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.0] - 2026-03-13
+
+### Added
+
+- **Present-before-writing rule** — `_shared` now includes `present-before-writing.mdc`, a global rule for hub/meta artifacts (new rules, commands, design-log sections): present the full draft in chat and wait for explicit approval before writing files.
+- **AGENTS.md** — Root-level AI contract describing the hub’s purpose, where packs/commands/rules live, the present-before-writing expectation, validation, and how agents should treat the hub itself.
+- **Security pack** — New `security` pack with a security reviewer agent and `/security__standalone-audit` command for one-pass security reviews (vulnerabilities, deps, secrets, auth, crypto, misconfiguration, CI/CD) and severity-graded reports.
+- **Rust idiom rules** — Additional Rust rules in the implementation pack: `rust-design-patterns.mdc` (iterators, newtype, extension traits, `non_exhaustive`, `Result<Option<T>,E>`) and `rust-error-handling.mdc` (error types, propagation, unwrap/expect guidance, boundaries).
+- **Language placeholders** — Empty packs for `python`, `js-ts`, and `terraform` to prepare for future language-specific rules/commands.
+- **Language manifests** — `packs/cursor/languages/<lang>/manifest.yml` (rust, python, js-ts, terraform) define, per language, which shared packs (e.g. `design-log`, `documentation`, `security`) and language-specific packs are installed.
+
+### Changed
+
+- **Rust pack layout** — All Rust packs are now under `packs/cursor/rust/` (design-review, implementation, testing, bugfix, review) instead of top-level `rust-*` folders. Shared packs remain at top level.
+- **Installer (`tools/install.py`)** — Pack discovery now walks `packs/cursor/**` and resolves pack names via `name:` in `pack.yml`; `--lang <lang>` expands to packs listed in `packs/cursor/languages/<lang>/manifest.yml` (in addition to any explicitly named packs). The `all`/`rust` aliases still expand to the Rust pack set.
+- **Pack validator (`tools/validate_packs.py`)** — Validation now recurses under `packs/cursor/**` and uses `name:` from `pack.yml` as the pack name for command/agent checks, so nested packs validate correctly.
+- **Rust testing rule** — `rust-testing.mdc` extended with guidance on running tests under Miri for unsafe/subtle code and using coverage tools (e.g. `cargo tarpaulin`, `cargo llvm-cov`) to find gaps rather than chase coverage percentages.
+- **Docs: cursor-primitives** — Added a compact comparison table for Rules, Commands, Agents, and (optionally) Skills, with columns for location, format, activation, purpose, and scope.
+- **Docs: authoring-guidelines** — Added rule templates (always-on and file-scoped/globs) plus concrete examples (testing rule, API rule) and clarified naming `{language}-{concern}.mdc`.
+- **Docs: command-authoring-examples** — New reference with a short command template (objective, steps, constraints, output) and three full examples (code review, run tests and fix, PR description) for pack authors.
+- **Docs: README, CATALOG, AGENTS** — Updated to describe the new language-aware structure: shared packs plus language-specific packs under `packs/cursor/<lang>/…`, language manifests in `packs/cursor/languages/<lang>/manifest.yml`, and the `--lang` installer flag.
+
+---
+
 ## [0.2.0] - 2025-03-10
 
 ### Added
@@ -72,7 +96,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Documentation**: CATALOG.md, using-packs, cursor-primitives, authoring-guidelines, pack-versioning, feature-workflow example.
 - LICENSE (MIT), CHANGELOG.md.
 
-[Unreleased]: https://github.com/your-org/cursor-hub/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/your-org/cursor-hub/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/your-org/cursor-hub/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/your-org/cursor-hub/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/your-org/cursor-hub/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/your-org/cursor-hub/releases/tag/v0.1.0

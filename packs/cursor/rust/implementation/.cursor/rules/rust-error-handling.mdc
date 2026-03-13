@@ -1,0 +1,16 @@
+---
+description: "Rust error handling: Result, ? operator, error types, propagation, boundaries"
+alwaysApply: false
+globs:
+  - "**/*.rs"
+---
+
+# Rust Error Handling
+
+- **Result in public APIs:** Functions that can fail should return `Result<T, E>`. Use a project-consistent error type (e.g. `thiserror` for library errors, `anyhow` for binaries); do not mix styles in the same layer.
+- **Propagation:** Use `?` for propagation. Add context with `.map_err()` or `.context()` when the call site would otherwise lose meaning (e.g. "failed to load config" rather than a bare IO error).
+- **Boundaries:** At FFI or process boundaries, convert to a stable representation (e.g. exit codes, serializable errors). Do not leak internal error types across boundaries.
+- **unwrap/expect:** Reserve for tests, examples, or truly unreachable paths; if used, add a one-line comment justifying. Never use in library or production code paths without justification.
+- **Panics:** Reserve for programming bugs (assert!, unreachable!); not for expected failures. Document panic conditions in doc comments if any.
+
+Good: `fn parse_config(path: &Path) -> Result<Config, ConfigError>`. Avoid: returning `Option` when the operation can fail with a reason.

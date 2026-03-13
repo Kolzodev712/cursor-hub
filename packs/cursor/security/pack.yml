@@ -1,0 +1,2 @@
+name: security
+description: Security review agent and optional audit command — vulnerabilities, deps, secrets, auth, crypto, misconfiguration, CI/CD.

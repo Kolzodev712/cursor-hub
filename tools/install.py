@@ -27,7 +27,7 @@ TOOLS_DIR = "tools"
 DESIGN_LOG_DIR = "design-log"
 SHARED_PACK = "_shared"
 # Alias: "all" or "rust" = all Rust packs
-ALL_RUST_PACKS = ["design-log", "rust-design-review", "rust-implementation", "rust-testing", "rust-bugfix", "rust-review", "documentation"]
+ALL_RUST_PACKS = ["design-log", "rust-design-review", "rust-implementation", "rust-testing", "rust-bugfix", "rust-review", "documentation", "security"]
 DESIGN_LOG_README = """# Design Log
 
 Design decisions and implementation notes live here as `NNN-short-name.md`.
@@ -62,22 +62,104 @@ def get_hub_root() -> str | None:
     return None
 
 
+def get_language_packs(repo_root: str, lang: str) -> list[str]:
+    """Read packs/cursor/languages/<lang>/manifest.yml and return combined shared + language packs.
+
+    The manifest format is a minimal YAML subset:
+        shared_packs:
+          - design-log
+        language_packs:
+          - rust-design-review
+    """
+    lang_dir = os.path.join(
+        repo_root,
+        PACKS_ROOT,
+        "cursor",
+        "languages",
+        lang,
+    )
+    manifest = os.path.join(lang_dir, "manifest.yml")
+    if not os.path.isfile(manifest):
+        print(f"Warning: no manifest for language '{lang}' at {manifest}")
+        return []
+
+    shared: list[str] = []
+    language_specific: list[str] = []
+    current: str | None = None
+
+    try:
+        with open(manifest, "r", encoding="utf-8") as f:
+            for raw in f:
+                line = raw.strip()
+                if not line or line.startswith("#"):
+                    continue
+                if line.startswith("shared_packs"):
+                    current = "shared"
+                    continue
+                if line.startswith("language_packs"):
+                    current = "language"
+                    continue
+                if line.startswith("-"):
+                    name = line.lstrip("-").strip()
+                    if not name:
+                        continue
+                    if current == "shared":
+                        shared.append(name)
+                    elif current == "language":
+                        language_specific.append(name)
+        return shared + language_specific
+    except OSError as e:
+        print(f"Warning: failed to read manifest for language '{lang}': {e}")
+        return []
+
+
 def get_pack_dirs(repo_root: str, pack_names: list[str]) -> list[str]:
-    """Resolve pack names to full paths. Always prepend _shared."""
-    cursor_packs = os.path.join(repo_root, PACKS_ROOT, "cursor")
-    seen = set()
-    out = []
-    for name in [SHARED_PACK] + [p for p in pack_names if p != SHARED_PACK]:
+    """Resolve pack names to full paths by scanning for pack.yml files.
+
+    Always prepends the shared pack (_shared). Pack names are matched against the
+    `name:` field in pack.yml when present, falling back to the directory name.
+    """
+    cursor_root = os.path.join(repo_root, PACKS_ROOT, "cursor")
+    if not os.path.isdir(cursor_root):
+        raise FileNotFoundError(f"Cursor packs root not found at {cursor_root}")
+
+    # Build an index of pack-name -> directory path
+    index: dict[str, str] = {}
+    for dirpath, dirnames, filenames in os.walk(cursor_root):
+        dirnames[:] = [d for d in dirnames if not d.startswith(".")]
+        if PACK_YML not in filenames:
+            continue
+        pack_path = dirpath
+        pack_name = os.path.basename(pack_path)
+        # Try to read explicit name: field from pack.yml
+        pack_yml = os.path.join(pack_path, PACK_YML)
+        explicit_name: str | None = None
+        try:
+            with open(pack_yml, "r", encoding="utf-8") as f:
+                for raw in f:
+                    line = raw.strip()
+                    if line.startswith("name:") and ":" in line:
+                        val = line.split(":", 1)[1].strip().strip("'\"")
+                        if val:
+                            explicit_name = val
+                        break
+        except OSError:
+            pass
+        key = explicit_name or pack_name
+        # Last one wins if duplicate names exist; validator should prevent that.
+        index[key] = pack_path
+
+    # Always include _shared first
+    ordered = [SHARED_PACK] + [p for p in pack_names if p != SHARED_PACK]
+    seen: set[str] = set()
+    out: list[str] = []
+    for name in ordered:
         if name in seen:
             continue
-        path = os.path.join(cursor_packs, name)
-        if not os.path.isdir(path):
-            raise FileNotFoundError(f"Pack not found: {name} at {path}")
-        pack_yml = os.path.join(path, "pack.yml")
-        if not os.path.isfile(pack_yml):
-            raise FileNotFoundError(f"Pack has no pack.yml: {name}")
+        if name not in index:
+            raise FileNotFoundError(f"Pack not found: {name}")
+        out.append(index[name])
         seen.add(name)
-        out.append(path)
     return out
 
 
@@ -168,7 +250,22 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true", help="Print what would be done without writing")
     parser.add_argument("--overwrite", action="store_true", help="Overwrite existing rule/command/agent files")
     parser.add_argument("--target", "-t", metavar="DIR", help="Target project directory (else last arg is target)")
-    parser.add_argument("packs", nargs="+", help="Pack name(s) then target dir as last arg. Use 'all' for all Rust packs.")
+    parser.add_argument(
+        "--lang",
+        "-l",
+        metavar="LANG",
+        action="append",
+        help=(
+            "Language shortcut (e.g. rust, python, js-ts, terraform). "
+            "May be repeated; expands to packs listed in packs/cursor/languages/<lang>/manifest.yml "
+            "in addition to any explicit packs."
+        ),
+    )
+    parser.add_argument(
+        "packs",
+        nargs="+",
+        help="Pack name(s) then target dir as last arg. Use 'all' for all Rust packs.",
+    )
     args = parser.parse_args()
 
     # Resolve target: explicit --target, or last positional arg, or cwd if only one arg
@@ -182,8 +279,16 @@ def main() -> int:
         pack_names = list(args.packs[:-1])
         target = os.path.abspath(args.packs[-1])
 
-    # Expand "all" or "rust" to all Rust packs
-    expanded = []
+    # Expand languages (if any) and aliases like "all"/"rust"
+    expanded: list[str] = []
+    # First: language manifests
+    if args.lang:
+        for lang in args.lang:
+            packs_for_lang = get_language_packs(get_hub_root() or os.getcwd(), lang)
+            if not packs_for_lang:
+                continue
+            expanded.extend(packs_for_lang)
+    # Then: explicit packs and aliases
     for p in pack_names:
         if p in ("all", "rust"):
             expanded.extend(ALL_RUST_PACKS)

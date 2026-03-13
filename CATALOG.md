@@ -15,7 +15,7 @@ There are **two ways** to use commands:
 
 **Contents:**
 
-- **Rules:** `design-log.mdc` — when to log, log structure (Background → Problem → Q/A → Design → Plan → Examples → Trade-offs → Verification → Implementation Results), deterministic creation via `.cursor/tools/new_design_log.py --slug <name>`; logs live in `.cursor/design-log/`.
+- **Rules:** `design-log.mdc` — when to log, log structure (Background → Problem → Q/A → Design → Plan → Examples → Trade-offs → Verification → Implementation Results), deterministic creation via `.cursor/tools/new_design_log.py --slug <name>`; logs live in `.cursor/design-log/`. `present-before-writing.mdc` — for new rules, commands, or design-log sections beyond the template: present full draft and wait for explicit approval before writing files (applies when working on the hub or generating hub artifacts).
 
 **No commands or agents.** Other packs add those.
 
@@ -85,6 +85,12 @@ You drive the inputs; the model refuses to propose solutions or write code until
 | `/documentation__standalone-workflow-doc` | General-level workflow doc: how work gets done, phases, tooling, conventions. |
 | `/documentation__standalone-specific-workflow-doc` | In-depth specific workflow doc: step-by-step guide for one workflow, with examples. |
 | `/documentation__standalone-bug-summary` | Bug summary: what was wrong, root cause, fix, verification (for tickets or handoffs). |
+
+### Security
+
+| Command | Description |
+|--------|-------------|
+| `/security__standalone-audit` | One-pass security review: vulnerabilities, deps, secrets, auth, crypto, misconfiguration, CI/CD; report with severity and recommendations. |
 
 ---
 
@@ -164,6 +170,14 @@ You drive the inputs; the model refuses to propose solutions or write code until
 
 **Agents:** `documentation.md`.
 
+### security
+
+**Purpose:** Security review: code vulnerabilities, dependency audit, secrets, auth, crypto, misconfiguration, CI/CD. Severity levels and report format.
+
+**Commands (standalone):** security__standalone-audit.
+
+**Agents:** `security.md`.
+
 ---
 
 ## Installing
@@ -172,6 +186,8 @@ From the cursor-hub repo root:
 
 ```bash
 python tools/install.py <pack> [pack ...] <target_dir>
+# or, to use a language profile (packs listed in packs/cursor/languages/<lang>/manifest.yml):
+python tools/install.py --lang rust all <target_dir>
 ```
 
-Example: `python tools/install.py design-log rust-design-review rust-implementation /path/to/your/project`
+Example: `python tools/install.py --lang rust all /path/to/your/project`
