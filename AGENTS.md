@@ -4,6 +4,11 @@ This file is the single contract for contributors and agents working on the **cu
 
 ## Purpose of the hub
 
+- **Languages:** `tools/install.py` defines language profiles for `--lang` (e.g. rust
+  installs design-log, documentation, security, and all Rust packs under
+  `packs/cursor/rust/`). Other languages currently install shared packs plus their
+  placeholder pack.
+
 - **Languages:** Language profiles live under `packs/cursor/languages/<lang>/manifest.yml` and list which packs to install for that language. Rust-specific packs live under `packs/cursor/rust/` (design-review, implementation, testing, bugfix, review). Other languages (python, js-ts, terraform) have placeholder packs today.
 
 

@@ -91,19 +91,12 @@ Checks that every pack has `pack.yml`, rules have valid frontmatter, commands fo
 
 ## Languages
 
-- Language profiles live under `packs/cursor/languages/<lang>/manifest.yml`.
-- Shared packs (e.g. `design-log`, `documentation`, `security`) are referenced from each manifest.
-- Rust-specific packs live under `packs/cursor/rust/` (e.g. `design-review`, `implementation`, `testing`, `bugfix`, `review`).
-
-
-- [examples/feature-workflow.md](examples/feature-workflow.md) — Main workflow and standalone commands with examples.
-- [docs/using-packs.md](docs/using-packs.md) — How to use commands: main workflow vs standalone.
-- [CATALOG.md](CATALOG.md) — All packs and commands.
-- [docs/cursor-primitives.md](docs/cursor-primitives.md) — Rules vs commands vs agents (with comparison table).
-- [docs/authoring-guidelines.md](docs/authoring-guidelines.md) — Sizing, naming, rule templates, and frontmatter.
-- [docs/command-authoring-examples.md](docs/command-authoring-examples.md) — Command template and 2–3 full examples for pack authors.
-- [docs/pack-versioning.md](docs/pack-versioning.md) — Versioning and compatibility.
-
+- Language profiles are built into 
+  `tools/install.py` via the `--lang` flag.
+- `--lang rust` installs: `design-log`, `documentation`, `security`, and all Rust packs
+  (`rust-design-review`, `rust-implementation`, `rust-testing`, `rust-bugfix`, `rust-review`).
+- Other languages (python, js-ts, terraform) currently install shared packs
+  (`design-log`, `documentation`, `security`) plus their placeholder pack.
 ## Meta / authoring
 
 - **[AGENTS.md](AGENTS.md)** — Contract for contributors and agents working on the hub: purpose, where packs/commands/rules live, present drafts for approval.

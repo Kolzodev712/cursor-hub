@@ -27,7 +27,22 @@ TOOLS_DIR = "tools"
 DESIGN_LOG_DIR = "design-log"
 SHARED_PACK = "_shared"
 # Alias: "all" or "rust" = all Rust packs
-ALL_RUST_PACKS = ["design-log", "rust-design-review", "rust-implementation", "rust-testing", "rust-bugfix", "rust-review", "documentation", "security"]
+ALL_RUST_PACKS = [
+    "design-log",
+    "rust-design-review",
+    "rust-implementation",
+    "rust-testing",
+    "rust-bugfix",
+    "rust-review",
+    "documentation",
+    "security",
+]
+LANGUAGE_PACK_SETS: dict[str, list[str]] = {
+    "rust": ALL_RUST_PACKS,
+    "python": ["design-log", "documentation", "security", "python"],
+    "js-ts": ["design-log", "documentation", "security", "js-ts"],
+    "terraform": ["design-log", "documentation", "security", "terraform"],
+}
 DESIGN_LOG_README = """# Design Log
 
 Design decisions and implementation notes live here as `NNN-short-name.md`.
@@ -60,57 +75,6 @@ def get_hub_root() -> str | None:
     if os.path.isdir(os.path.join(candidate, PACKS_ROOT, "cursor", SHARED_PACK)):
         return candidate
     return None
-
-
-def get_language_packs(repo_root: str, lang: str) -> list[str]:
-    """Read packs/cursor/languages/<lang>/manifest.yml and return combined shared + language packs.
-
-    The manifest format is a minimal YAML subset:
-        shared_packs:
-          - design-log
-        language_packs:
-          - rust-design-review
-    """
-    lang_dir = os.path.join(
-        repo_root,
-        PACKS_ROOT,
-        "cursor",
-        "languages",
-        lang,
-    )
-    manifest = os.path.join(lang_dir, "manifest.yml")
-    if not os.path.isfile(manifest):
-        print(f"Warning: no manifest for language '{lang}' at {manifest}")
-        return []
-
-    shared: list[str] = []
-    language_specific: list[str] = []
-    current: str | None = None
-
-    try:
-        with open(manifest, "r", encoding="utf-8") as f:
-            for raw in f:
-                line = raw.strip()
-                if not line or line.startswith("#"):
-                    continue
-                if line.startswith("shared_packs"):
-                    current = "shared"
-                    continue
-                if line.startswith("language_packs"):
-                    current = "language"
-                    continue
-                if line.startswith("-"):
-                    name = line.lstrip("-").strip()
-                    if not name:
-                        continue
-                    if current == "shared":
-                        shared.append(name)
-                    elif current == "language":
-                        language_specific.append(name)
-        return shared + language_specific
-    except OSError as e:
-        print(f"Warning: failed to read manifest for language '{lang}': {e}")
-        return []
 
 
 def get_pack_dirs(repo_root: str, pack_names: list[str]) -> list[str]:
@@ -257,8 +221,7 @@ def main() -> int:
         action="append",
         help=(
             "Language shortcut (e.g. rust, python, js-ts, terraform). "
-            "May be repeated; expands to packs listed in packs/cursor/languages/<lang>/manifest.yml "
-            "in addition to any explicit packs."
+            "May be repeated; expands to predefined pack sets in addition to any explicit packs."
         ),
     )
     parser.add_argument(
@@ -281,11 +244,13 @@ def main() -> int:
 
     # Expand languages (if any) and aliases like "all"/"rust"
     expanded: list[str] = []
-    # First: language manifests
+    # First: language sets
     if args.lang:
         for lang in args.lang:
-            packs_for_lang = get_language_packs(get_hub_root() or os.getcwd(), lang)
+            packs_for_lang = LANGUAGE_PACK_SETS.get(lang)
             if not packs_for_lang:
+                known = ", ".join(sorted(LANGUAGE_PACK_SETS))
+                print(f"Warning: unknown language '{lang}' (known: {known})")
                 continue
             expanded.extend(packs_for_lang)
     # Then: explicit packs and aliases

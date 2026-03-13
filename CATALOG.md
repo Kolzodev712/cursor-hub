@@ -186,7 +186,7 @@ From the cursor-hub repo root:
 
 ```bash
 python tools/install.py <pack> [pack ...] <target_dir>
-# or, to use a language profile (packs listed in packs/cursor/languages/<lang>/manifest.yml):
+# or, to use a language profile:
 python tools/install.py --lang rust all <target_dir>
 ```
 

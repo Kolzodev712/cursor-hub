@@ -1,7 +1,0 @@
-shared_packs:
-  - design-log
-  - documentation
-  - security
-language_packs:
-  - terraform
-
