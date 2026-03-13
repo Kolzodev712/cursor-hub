@@ -1,7 +1,5 @@
 # cursor-hub
 
-[![Validate packs](https://github.com/your-org/cursor-hub/actions/workflows/validate.yml/badge.svg)](https://github.com/your-org/cursor-hub/actions/workflows/validate.yml) — *Replace `your-org/cursor-hub` with your repo for the badge.*
-
 A **public Cursor AI hub**: modular rules, commands, and agents for guiding AI assistants. The content is **language- and model-agnostic** in principle; this repository currently ships **Cursor-only** instructions (rules, slash commands, agents), with a **Rust-first** set of packs.
 
 ## What's in the repo
