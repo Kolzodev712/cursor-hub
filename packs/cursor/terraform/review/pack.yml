@@ -1,0 +1,3 @@
+name: terraform-review
+description: Code review pack for Terraform — PR review checklist, risky-changes scan (state, sensitive, destroy).
+version: "0.3.0"

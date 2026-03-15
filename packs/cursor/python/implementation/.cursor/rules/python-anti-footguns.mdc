@@ -1,0 +1,14 @@
+---
+description: "Python pitfalls to avoid: mutability, imports, errors, concurrency"
+alwaysApply: false
+globs:
+  - "**/*.py"
+---
+
+# Python Anti-Footguns
+
+- **Mutable defaults:** Do not use mutable default arguments (e.g. `def f(x=[])`); use `None` and assign inside the function.
+- **Imports and side effects:** Avoid side effects at import time. Prefer explicit initialization or lazy loading.
+- **Error handling:** Use exceptions appropriately; do not catch and ignore unless intentional. Prefer specific exception types; document what can be raised for public APIs.
+- **Concurrency:** When using threads or async, avoid shared mutable state without synchronization; document assumptions (GIL, event loop).
+- **Resource cleanup:** Use context managers (`with`) for files, connections, locks; ensure resources are released on all paths.

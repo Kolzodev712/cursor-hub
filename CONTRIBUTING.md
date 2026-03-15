@@ -24,7 +24,7 @@ Thanks for considering contributing. This document explains how to propose chang
 2. Run `python tools/validate_packs.py` and fix any failures.
 3. Keep changes focused: one logical change per PR (e.g. one new rule, or one pack update).
 4. Update [CHANGELOG.md](CHANGELOG.md) under `[Unreleased]` for user-visible changes.
-5. Open a PR; we’ll run CI (validation) and review.
+5. Open a PR; we'll run CI (validation) and review.
 
 ## Adding a new pack
 
@@ -34,7 +34,7 @@ Thanks for considering contributing. This document explains how to propose chang
    - `.cursor/commands/` — each file must be named `<pack-name>__<command>.md`.
    - `.cursor/agents/` (optional) — `.md` files only.
 2. Run `python tools/validate_packs.py` and fix any errors.
-3. Document the pack in [CATALOG.md](CATALOG.md) and add it to the installer’s `ALL_RUST_PACKS` in `tools/install.py` if it should be part of the “all” set.
+3. Document the pack in [CATALOG.md](CATALOG.md) and add it to the appropriate pack set in `cursor_hub/installer.py` (e.g. `ALL_RUST_PACKS`, `ALL_PYTHON_PACKS`) if it should be part of the "all" set for that language.
 
 ## Adding a new command
 

@@ -1,0 +1,14 @@
+---
+description: "Terraform pitfalls to avoid: state, sensitive values, destroy, lifecycle"
+alwaysApply: false
+globs:
+  - "**/*.tf"
+---
+
+# Terraform Anti-Footguns
+
+- **Sensitive values:** Do not put secrets or sensitive data in .tf or .tfvars committed to the repo. Use variables with `sensitive = true`, env vars, or a secret store. Do not log sensitive outputs.
+- **State:** Do not assume state is shared or locked; document state backend and locking. Avoid destructive state operations (e.g. remove from state) unless the user explicitly requests them.
+- **Destroy:** Do not run `terraform destroy` or suggest it unless the user explicitly asks. Flag any change that could cause unexpected destroy or replace.
+- **Lifecycle:** Use lifecycle blocks (create_before_destroy, prevent_destroy) only when justified; document why.
+- **Provider version:** Pin provider versions in required_providers; avoid unversioned or latest in production.

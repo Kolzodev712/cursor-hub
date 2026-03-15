@@ -1,0 +1,18 @@
+---
+description: "When to use standalone fix vs bugfix workflow (investigation → solution → resolution)"
+alwaysApply: false
+globs: []
+---
+
+# JS/TS bugfix — standalone vs workflow
+
+This pack is **separate** from the main workflow (js-ts-design-review → js-ts-implementation → js-ts-testing). Bugfix has its own flow and its own design logs.
+
+- **Standalone — fix small bug:** Use `/js-ts-bugfix__standalone-fix-small-bug` when the bug is small, root cause is obvious or quick to find, and a minimal fix is enough. Design log is optional.
+
+- **Workflow — 3 steps:** Use the bugfix workflow when the bug is non-trivial, needs investigation, or has design trade-offs:
+  1. **wf-1-investigation** — Bug investigation and evidence collection. Record in design log (Investigation section).
+  2. **wf-2-proposed-solution** — Proposed solution and design trade-offs. Record in design log (Proposed solution, Trade-offs).
+  3. **wf-3-resolution** — Systematic resolution (implement fix, verification). Record in design log (Resolution section).
+
+Each workflow step creates or appends a design log in `./.cursor/design-log/`. Use a dedicated log for the bug (e.g. slug `bugfix-xyz`) when using the 3-step workflow.

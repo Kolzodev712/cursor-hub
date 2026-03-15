@@ -1,0 +1,3 @@
+name: js-ts-design-review
+description: Design review pack for JavaScript/TypeScript — question-first approach, design review bar, ADR creation, decision summaries.
+version: "0.3.0"

@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cursor-hub"
+version = "0.4.0"
+description = "Install Cursor packs (rules, commands, agents) into a project. Design-log workflow and language workflows for Rust, Python, JS/TS, Terraform."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [{ name = "Your Org" }]
+keywords = ["cursor", "cursor-ide", "packs", "workflow", "design-log"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.scripts]
+cursor-hub = "cursor_hub.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["cursor_hub*"]

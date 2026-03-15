@@ -1,0 +1,3 @@
+name: python-review
+description: Code review pack for Python — PR review checklist, risky-changes scan, correctness and maintainability.
+version: "0.3.0"

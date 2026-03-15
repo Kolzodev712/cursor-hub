@@ -1,0 +1,3 @@
+name: js-ts-bugfix
+description: Bugfix pack for JS/TS — standalone fix for small bugs, or 3-step workflow (investigation → proposed solution → resolution). Uses its own design logs.
+version: "0.3.0"

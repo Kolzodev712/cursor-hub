@@ -1,0 +1,16 @@
+---
+description: "JS/TS implementation discipline: small diffs, no scope creep, verification loop"
+alwaysApply: false
+globs:
+  - "**/*.js"
+  - "**/*.ts"
+  - "**/package.json"
+---
+
+# JS/TS Core (Implementation)
+
+- **Small diffs:** Prefer incremental changes. One logical change per edit session; avoid bundling unrelated fixes.
+- **No scope creep:** Implement only what the task or design log specifies. Do not add new features or refactors unless explicitly asked.
+- **Dependencies:** Do not add new dependencies unless the user or design log explicitly requests them.
+- **Types:** Prefer TypeScript types for public APIs and non-trivial logic when the project uses TS; do not strip existing types.
+- **Verification:** After edits, run from project root (adjust for project): lint (e.g. `npm run lint` or `eslint .`), type check (`tsc --noEmit` or `npm run typecheck` if used), tests (`npm test` or `jest`/`vitest`). Fix any failures before considering the task done.

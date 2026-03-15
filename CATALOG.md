@@ -180,14 +180,46 @@ You drive the inputs; the model refuses to propose solutions or write code until
 
 ---
 
+## Language packs (Python, JS/TS, Terraform)
+
+The same workflow structure (design-review → implementation → testing, plus bugfix and review) is available for **Python**, **JS/TS**, and **Terraform**. Each language has five packs mirroring the Rust packs; install with `--lang <language>`.
+
+| Language   | Packs (use with `--lang python` / `--lang js-ts` / `--lang terraform`) |
+|-----------|-----------------------------------------------------------------------|
+| **Python**   | design-log, python-design-review, python-implementation, python-testing, python-bugfix, python-review, documentation, security |
+| **JS/TS**    | design-log, js-ts-design-review, js-ts-implementation, js-ts-testing, js-ts-bugfix, js-ts-review, documentation, security |
+| **Terraform**| design-log, terraform-design-review, terraform-implementation, terraform-testing, terraform-bugfix, terraform-review, documentation, security |
+
+**Workflow commands** (same pattern as Rust; substitute the pack prefix):
+
+- Design review: `/<lang>-design-review__wf-1-design-review`, `/<lang>-design-review__gate-design`, `/<lang>-design-review__standalone-decision-summary`
+- Implementation: `/<lang>-implementation__wf-1-implement-module`, `/<lang>-implementation__gate-impl`, `/<lang>-implementation__standalone-refactor-safe`
+- Testing: `/<lang>-testing__wf-1-add-tests-only`, `/<lang>-testing__gate-test`
+- Bugfix: `/<lang>-bugfix__standalone-fix-small-bug`, `/<lang>-bugfix__wf-1-investigation`, `/<lang>-bugfix__wf-2-proposed-solution`, `/<lang>-bugfix__wf-3-resolution`
+- Review: `/<lang>-review__standalone-pr-review`, `/<lang>-review__standalone-risky-changes-scan`
+
+Where `<lang>` is `python`, `js-ts`, or `terraform`. Rules and agents are language-specific (e.g. Python: pytest, black/ruff; JS/TS: npm test, ESLint; Terraform: terraform fmt/validate, state/sensitive checks).
+
+---
+
 ## Installing
 
-From the cursor-hub repo root:
+**CLI (recommended):** From the hub repo, run `pip install -e .`, then from any directory:
+
+```bash
+cursor-hub install <pack> [pack ...] [target_dir]
+cursor-hub install --lang rust all /path/to/project
+cursor-hub install --lang python all .
+```
+
+**Script:** From the cursor-hub repo root:
 
 ```bash
 python tools/install.py <pack> [pack ...] <target_dir>
-# or, to use a language profile:
-python tools/install.py --lang rust all <target_dir>
+python tools/install.py --lang rust /path/to/project
+python tools/install.py --lang python /path/to/project
+python tools/install.py --lang js-ts /path/to/project
+python tools/install.py --lang terraform /path/to/project
 ```
 
-Example: `python tools/install.py --lang rust all /path/to/your/project`
+Example: `cursor-hub install --lang rust .` or `python tools/install.py --lang rust /path/to/your/project`

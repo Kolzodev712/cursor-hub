@@ -1,0 +1,21 @@
+---
+description: "Python implementation discipline: small diffs, no scope creep, verification loop"
+alwaysApply: false
+globs:
+  - "**/*.py"
+  - "**/pyproject.toml"
+  - "**/setup.py"
+---
+
+# Python Core (Implementation)
+
+- **Small diffs:** Prefer incremental changes. One logical change per edit session; avoid bundling unrelated fixes.
+- **No scope creep:** Implement only what the task or design log specifies. Do not add new features or refactors unless explicitly asked.
+- **Dependencies:** Do not add new dependencies unless the user or design log explicitly requests them.
+- **Type hints:** Prefer type hints for public APIs and non-trivial logic when the project uses them; do not strip existing hints.
+- **Verification:** After edits, run from project root (adjust for project layout):
+  - Format: `black .` or `ruff format .` (if the project uses them)
+  - Lint: `ruff check .` or `pylint` / `flake8` as the project uses
+  - Type check: `mypy .` or `pyright` if the project uses them
+  - Tests: `pytest` (or `python -m pytest`)
+  Fix any failures before considering the task done.

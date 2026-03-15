@@ -6,7 +6,7 @@ How to keep packs “just right”: clear purpose, no bloat, commands that force
 
 - **One concern per rule.** If a rule file grows beyond a single theme (e.g. “design review bar” or “Rust error handling”), split it.
 - **Keep alwaysApply rules short.** If it’s always-on, every conversation pays the token cost. Put long procedures in commands.
-- **Commands: one workflow per file.** The command filename must be `{pack-name}__{task}.md` (e.g. `rust-design-review__wf-1-design-review.md` → `/rust-design-review__wf-1-design-review`). This avoids collisions when installing multiple packs.
+- **Commands: one workflow per file.** The command filename must be `{pack-name}__{task}.md` (e.g. `rust-design-review__wf-1-design-review.md` → `/rust-design-review__wf-1-design-review`). Same pattern for python-*, js-ts-*, terraform-* packs. This avoids collisions when installing multiple packs.
 - **Agents: one role per file.** Describe behavior and scope; avoid duplicating long rule text.
 
 ## Avoid alwaysApply bloat
@@ -20,15 +20,18 @@ Commands that change code should end with an explicit verification step so the m
 
 - **Rust:** “Run `cargo fmt --all -- --check` (then `cargo fmt --all` if needed), `cargo clippy --fix --allow-dirty --all-targets --all-features -- -D warnings`, and `cargo test --all-features`. Optionally `cargo audit` and `cargo check --all-targets --all-features`. If the project has a justfile, `just quick` or `just fmt` / `just clippy-fix` / `just test` can be used as equivalents. Fix any failures before considering the task done.”
 - **Design/ADR:** “Create the log with `python .cursor/tools/new_design_log.py --slug <name>`; do not guess the next NNN.”
-- **Refactor:** “Run tests after each step; do not proceed to the next step until tests pass.”
+- **Python:** "Run format/lint (e.g. `black .`, `ruff check .`), type check if used (e.g. `mypy .`), and tests (`pytest`). Fix any failures."
+- **JS/TS:** "Run lint (e.g. `npm run lint` or `eslint .`), type check if used (`tsc --noEmit` or `npm run typecheck`), and tests (`npm test`). Fix any failures."
+- **Terraform:** "Run `terraform fmt -recursive`, `terraform validate`; optionally `terraform plan`. Fix any failures."
+- **Refactor:** “Run verification after each step; do not proceed to the next step until it passes.”
 
 State the exact commands and the success criterion (e.g. “all tests pass”, “script prints the new file path”).
 
 ## Naming
 
-- **Rules:** `kebab-case.mdc`, descriptive (e.g. `rust-anti-footguns.mdc`, `design-log.mdc`).
-- **Commands:** `{pack-name}__{kebab-case}.md`; the stem is the slash command (e.g. `rust-design-review__wf-1-design-review.md` → `/rust-design-review__wf-1-design-review`). See [pack-versioning](pack-versioning.md) for the naming convention.
-- **Agents:** `kebab-case.md` (e.g. `design-critic.md`, `rust-implementer.md`).
+- **Rules:** `kebab-case.mdc`, descriptive (e.g. `rust-anti-footguns.mdc`, `python-core.mdc`, `terraform-review.mdc`, `design-log.mdc`). Language-scoped: `{language}-{concern}.mdc` (rust, python, js-ts, terraform).
+- **Commands:** `{pack-name}__{kebab-case}.md`; the stem is the slash command (e.g. `rust-design-review__wf-1-design-review.md` → `/rust-design-review__wf-1-design-review`). Same for python-*, js-ts-*, terraform-*. See [pack-versioning](pack-versioning.md) for the naming convention.
+- **Agents:** `kebab-case.md` (e.g. `design-critic.md`, `rust-implementer.md`, `python-implementer.md`, `terraform-bugfix.md`).
 
 ## Frontmatter (rules)
 

@@ -1,0 +1,14 @@
+---
+description: "Terraform implementation discipline: small diffs, no scope creep, fmt/validate workflow"
+alwaysApply: false
+globs:
+  - "**/*.tf"
+  - "**/*.tfvars"
+---
+
+# Terraform Core (Implementation)
+
+- **Small diffs:** Prefer incremental changes. One logical change per edit session; avoid bundling unrelated resources or modules.
+- **No scope creep:** Implement only what the task or design log specifies. Do not add new resources or modules unless explicitly asked.
+- **State and drift:** Do not assume state is clean; note when plan may require refresh or state operations. Do not run apply in this workflow unless the user explicitly requests it.
+- **Verification:** After edits, run from the relevant module or root: `terraform fmt -recursive -check` (then `terraform fmt -recursive` if needed), `terraform validate`. Optionally `terraform plan` (no apply). Fix any validation failures before considering the task done.

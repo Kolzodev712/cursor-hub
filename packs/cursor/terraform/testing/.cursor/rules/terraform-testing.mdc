@@ -1,0 +1,14 @@
+---
+description: "Terraform testing: plan checks, terratest, deterministic"
+alwaysApply: false
+globs:
+  - "**/*.tf"
+  - "**/test/**/*.go"
+---
+
+# Terraform Testing
+
+- **Plan and validate:** Use `terraform plan` and `terraform validate` as baseline checks. Consider check blocks (terraform test) or policy (e.g. OPA, sentinel) if the project uses them.
+- **Terratest / integration:** When the project uses Go-based tests (e.g. terratest), keep tests deterministic and isolated; clean up resources.
+- **Deterministic:** Avoid reliance on wall clock or external state that can change between runs. Document assumptions (e.g. clean state, specific provider version).
+- **Coverage:** Aim for meaningful checks (e.g. expected resources in plan, no unexpected changes). Do not add tests that only restate the config with no independent assertion.

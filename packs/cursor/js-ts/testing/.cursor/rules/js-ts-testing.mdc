@@ -1,0 +1,17 @@
+---
+description: "JS/TS testing: unit vs integration, deterministic, fixtures, Jest/Vitest"
+alwaysApply: false
+globs:
+  - "**/*.js"
+  - "**/*.ts"
+  - "**/__tests__/**/*"
+  - "**/*.test.*"
+---
+
+# JS/TS Testing
+
+- **Unit vs integration:** Use unit tests for pure logic and single-module behavior; use integration tests for I/O or cross-module behavior. Keep tests fast and deterministic.
+- **Deterministic tests:** Avoid reliance on wall clock, random (unless fixed seed), or external services. Use mocks or fixtures for I/O.
+- **Fixtures:** Use shared test data or helpers to keep tests readable and consistent.
+- **Coverage:** Aim for meaningful coverage of behavior and edge cases, not "coverage theater." Do **not** add tests that only assert what the implementation literally does with no independent specification.
+- **Runner:** Use project test runner (Jest, Vitest, etc.). Run with `npm test` from project root; respect project layout.

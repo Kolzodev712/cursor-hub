@@ -1,0 +1,3 @@
+name: terraform-implementation
+description: Implementation pack for Terraform — small diffs, module discipline, fmt/validate workflow.
+version: "0.3.0"

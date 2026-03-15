@@ -1,0 +1,20 @@
+---
+description: "JS/TS code review checklist: correctness, API, types, security, tests"
+alwaysApply: false
+globs:
+  - "**/*.js"
+  - "**/*.ts"
+  - "**/package.json"
+---
+
+# JS/TS Review
+
+When reviewing JS/TS code, check:
+
+- **Correctness:** Logic and types are correct; no obvious bugs or misuse of APIs.
+- **API stability:** Public API changes are intentional and documented; consider backward compatibility.
+- **Types:** No inappropriate `any`; null/undefined handled; async/rejections handled.
+- **Security:** Inputs validated; no sensitive data in logs or client-exposed code.
+- **Test adequacy:** New behavior has tests; existing tests still pass; edge cases considered.
+
+Prioritize findings as **must-fix** (correctness, safety, API contract) vs **nice-to-have** (style, clarity).

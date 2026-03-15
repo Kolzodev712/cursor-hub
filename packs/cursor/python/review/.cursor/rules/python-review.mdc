@@ -1,0 +1,20 @@
+---
+description: "Python code review checklist: correctness, API, errors, style, tests"
+alwaysApply: false
+globs:
+  - "**/*.py"
+  - "**/pyproject.toml"
+---
+
+# Python Review
+
+When reviewing Python code, check:
+
+- **Correctness:** Logic and types are correct; no obvious bugs or misuse of APIs.
+- **API stability:** Public API changes are intentional and documented; consider backward compatibility.
+- **Error handling:** Exceptions are appropriate; no bare except or swallowed errors without justification.
+- **Style and consistency:** Follow project style (black/ruff); consistent naming and structure.
+- **Security:** Inputs validated; no sensitive data in logs or error messages.
+- **Test adequacy:** New behavior has tests; existing tests still pass; edge cases considered.
+
+Prioritize findings as **must-fix** (correctness, safety, API contract) vs **nice-to-have** (style, clarity).

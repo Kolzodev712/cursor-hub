@@ -1,0 +1,28 @@
+---
+description: "Design review quality bar for Terraform: tradeoffs, alternatives, constraints, acceptance criteria"
+alwaysApply: false
+globs:
+  - "**/*.tf"
+  - "**/.cursor/design-log/*.md"
+---
+
+# Terraform Design Review
+
+When reviewing or producing a design (for Terraform or this repo), ensure:
+
+## Quality bar
+
+- **Trade-offs:** Explicitly state what we give up and why the chosen option is still acceptable.
+- **Alternatives considered:** List at least one alternative and why it was rejected (or deferred).
+- **Constraints:** Call out hard constraints (state, provider versions, security, cost, blast radius).
+- **Acceptance criteria:** Define how we will verify the design (plan review, apply in staging, checks).
+
+## Design log alignment
+
+- Follow the design-log structure: Background → Problem → Q/A → Design → Plan → Examples → Trade-offs → Verification.
+- Create new design logs via `python .cursor/tools/new_design_log.py --slug <short-name>`; do not guess the next NNN.
+- Reference existing design logs by number when the change builds on or affects prior decisions.
+
+## Scope
+
+- Keep designs focused: one problem per log when possible. If the change touches multiple modules or environments, call out dependencies and order.

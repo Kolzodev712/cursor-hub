@@ -1,0 +1,14 @@
+---
+description: "JS/TS pitfalls to avoid: any, null, async, side effects"
+alwaysApply: false
+globs:
+  - "**/*.js"
+  - "**/*.ts"
+---
+
+# JS/TS Anti-Footguns
+
+- **Avoid `any`:** Use proper types or `unknown`; narrow before use. Do not add `any` to silence the compiler without a short justification.
+- **Null/undefined:** Handle both where the type allows; use optional chaining and nullish coalescing appropriately. Do not assume non-null without a check or assertion.
+- **Async:** Prefer async/await over raw promises; handle rejections. Do not fire-and-forget without explicit intent.
+- **Side effects:** Avoid side effects at module load; prefer explicit initialization or lazy execution. Document what runs when.

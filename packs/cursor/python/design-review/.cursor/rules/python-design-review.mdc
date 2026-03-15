@@ -1,0 +1,29 @@
+---
+description: "Design review quality bar for Python: tradeoffs, alternatives, constraints, acceptance criteria"
+alwaysApply: false
+globs:
+  - "**/*.py"
+  - "**/.cursor/design-log/*.md"
+---
+
+# Python Design Review
+
+When reviewing or producing a design (for Python or this repo), ensure:
+
+## Quality bar
+
+- **Trade-offs:** Explicitly state what we give up and why the chosen option is still acceptable.
+- **Alternatives considered:** List at least one alternative and why it was rejected (or deferred).
+- **Constraints:** Call out hard constraints (performance, security, API stability, compatibility, runtime).
+- **Acceptance criteria:** Define how we will verify the design is implemented correctly (tests, type checks, invariants).
+
+## Design log alignment
+
+- Follow the design-log structure: Background → Problem → Q/A → Design → Plan → Examples → Trade-offs → Verification.
+- Create new design logs via `python .cursor/tools/new_design_log.py --slug <short-name>`; do not guess the next NNN.
+- Reference existing design logs by number when the change builds on or affects prior decisions.
+
+## Scope
+
+- Keep designs focused: one problem per log when possible.
+- If the change touches multiple areas, call out dependencies and order of implementation.

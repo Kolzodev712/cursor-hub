@@ -1,0 +1,3 @@
+name: python-testing
+description: Testing pack for Python — pytest, deterministic tests, fixtures, add-tests-only workflow.
+version: "0.3.0"

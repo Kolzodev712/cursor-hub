@@ -4,12 +4,7 @@ This file is the single contract for contributors and agents working on the **cu
 
 ## Purpose of the hub
 
-- **Languages:** `tools/install.py` defines language profiles for `--lang` (e.g. rust
-  installs design-log, documentation, security, and all Rust packs under
-  `packs/cursor/rust/`). Other languages currently install shared packs plus their
-  placeholder pack.
-
-- **Languages:** Language profiles live under `packs/cursor/languages/<lang>/manifest.yml` and list which packs to install for that language. Rust-specific packs live under `packs/cursor/rust/` (design-review, implementation, testing, bugfix, review). Other languages (python, js-ts, terraform) have placeholder packs today.
+- **Languages:** Language profiles for `--lang` are **rust**, **python**, **js-ts**, and **terraform**. Each language has a full set of packs (design-review, implementation, testing, bugfix, review) under `packs/cursor/rust/`, etc., plus shared packs (design-log, documentation, security). Use `cursor-hub install --lang <language> all <target_dir>` (or `python tools/install.py --lang <language> all <target_dir>` from the hub repo) to install the full set.
 
 
 - **Design-log and workflow are non-negotiable.** The hub ships a design-log methodology (logs in `.cursor/design-log/`, creation via `new_design_log.py`), workflow commands (design review → implement → test, plus bugfix flow), and standalone commands. Packs live under `packs/cursor/`; each has `pack.yml` and optionally `.cursor/rules/`, `.cursor/commands/`, `.cursor/agents/`.

@@ -11,6 +11,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.4.0] - 2026-03-15
+
+### Added
+
+- **cursor-hub CLI** — Install packs via `cursor-hub install` (after `pip install -e .` from the hub repo). Same behavior as `python tools/install.py`; install logic lives in `cursor_hub/installer.py`. Use `cursor-hub install --lang rust all .` or `python -m cursor_hub install all .`.
+
+### Changed
+
+- **Installer refactor** — `tools/install.py` now delegates to `cursor_hub/installer.py`. Language pack sets and install logic are in the package; the script remains supported for run-from-repo usage.
+- **Docs** — README, CATALOG, AGENTS, using-packs, pack-versioning, and CONTRIBUTING updated to recommend the CLI and mention both entry points.
+
+---
+
 ## [0.3.0] - 2026-03-13
 
 ### Added
@@ -96,7 +109,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Documentation**: CATALOG.md, using-packs, cursor-primitives, authoring-guidelines, pack-versioning, feature-workflow example.
 - LICENSE (MIT), CHANGELOG.md.
 
-[Unreleased]: https://github.com/your-org/cursor-hub/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/your-org/cursor-hub/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/your-org/cursor-hub/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/your-org/cursor-hub/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/your-org/cursor-hub/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/your-org/cursor-hub/compare/v0.1.0...v0.1.1

@@ -1,0 +1,19 @@
+---
+description: "Terraform code review checklist: correctness, state, sensitive, destroy, providers"
+alwaysApply: false
+globs:
+  - "**/*.tf"
+  - "**/*.tfvars"
+---
+
+# Terraform Review
+
+When reviewing Terraform code, check:
+
+- **Correctness:** Resource config matches intent; no invalid references or cycles; required arguments set.
+- **State and lifecycle:** No unexpected destroy or replace; lifecycle blocks justified; state operations documented.
+- **Sensitive data:** No secrets in .tf/.tfvars; sensitive variables and outputs marked; no sensitive data in logs.
+- **Provider and version:** Provider versions pinned; no deprecated arguments or resources.
+- **Security and cost:** No overly permissive IAM; no unintended public resources; cost-impacting changes called out.
+
+Prioritize findings as **must-fix** (correctness, safety, state integrity) vs **nice-to-have** (style, docs).

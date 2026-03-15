@@ -1,0 +1,15 @@
+---
+description: "Python testing: unit vs integration, deterministic, fixtures, pytest"
+alwaysApply: false
+globs:
+  - "**/*.py"
+  - "**/tests/**/*.py"
+---
+
+# Python Testing
+
+- **Unit vs integration:** Use unit tests for pure logic and single-module behavior; use integration tests for I/O or cross-module behavior. Keep tests fast and deterministic.
+- **Deterministic tests:** Avoid reliance on wall clock, random seed (unless fixed), or external services. Use mocks or fixtures for I/O.
+- **Fixtures:** Use pytest fixtures or shared helpers to keep tests readable and consistent. Avoid duplicating large setup.
+- **Coverage:** Aim for meaningful coverage of behavior and edge cases, not "coverage theater." Prefer tests that would catch real regressions. Do **not** add tests that only assert what the implementation literally does with no independent specification.
+- **pytest:** Use pytest idioms (assert, parametrize, fixtures). Run with `pytest` from project root; respect conftest and project layout.
