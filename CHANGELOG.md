@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-(No changes yet.)
+### Changed
+
+- **Installer** — `expand_pack_names`: language shorthand (`rust` / `python` / `js-ts` / `terraform`) installs that language bundle; `--lang …` combined with positional `all` no longer duplicates packs; repeating the same language in `--lang` and as a positional is deduped. `cursor-hub install <lang>` is consistent across languages (not only Rust).
+- **Tools merge** — `copy_tools` merges files into `.cursor/tools/` instead of deleting the folder (local scripts alongside hub tools are preserved).
+- **Workflow design-log validator** — Requires `[cursor-hub workflow] step=<step>` for slim logs (legacy section-only logs still validate). Documentation and workflow commands describe the stamp; CLI hints when hub pack source cannot be found (PyPI wheels without packs).
 
 ---
 

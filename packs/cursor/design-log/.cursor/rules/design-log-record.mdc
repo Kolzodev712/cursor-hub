@@ -1,5 +1,5 @@
 ---
-description: "After a workflow step: create or append design log (Design discussion, Implementation Results, Test session; or Bugfix workflow: Investigation, Proposed solution, Resolution)"
+description: "After a workflow step: create or append design log; workflow stamp line for slim logs; legacy section headings still supported"
 alwaysApply: false
 globs: []
 ---
@@ -9,6 +9,8 @@ globs: []
 **Reference only.** This rule is not auto-applied (`alwaysApply: false`, no globs). Workflow commands inline the recording and verification steps; use this file as pack documentation and section-format reference.
 
 When a **workflow command** completes, you **must** record that step in the design log. Do not skip this; do not ask "should I create a log?" — do it as part of the same response.
+
+**Validator / slim logs:** Append an exact standalone line **`[cursor-hub workflow] step=<step>`** (step matches `validate_workflow_design_log.py --step …`). Legacy-only sections such as **Design discussion** or **Implementation Results** still validate without that line.
 
 **Main workflow commands:** wf-1-design-review, wf-1-implement-module, wf-1-add-tests-only (rust-design-review, rust-implementation, rust-testing).  
 **Bugfix workflow commands (separate flow):** wf-1-investigation, wf-2-proposed-solution, wf-3-resolution (rust-bugfix).

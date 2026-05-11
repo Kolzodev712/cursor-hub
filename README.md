@@ -86,7 +86,7 @@ To create the next design log file **without guessing the number**:
 - **From the hub repo** (e.g. hub as submodule, creating a log in a project):  
   `python tools/new_design_log.py --slug short-name --dir /path/to/your/project/.cursor/design-log`
 
-**Workflow validator (workflow commands only):** After running a workflow command (not a standalone), the command instructs the model to run `python .cursor/tools/validate_workflow_design_log.py --step <step>` to verify the design log was updated. Steps: `design-review`, `implement`, `add-tests`, `investigation`, `proposed-solution`, `resolution`. Standalone commands do not run this validator.
+**Workflow validator (workflow commands only):** After a workflow command, run `python .cursor/tools/validate_workflow_design_log.py --step <step>`. Slim logs must include an exact line **`[cursor-hub workflow] step=<same-as---step>`** when the step is recorded; older logs using legacy headings only still pass without it. Steps: `design-review`, `implement`, `add-tests`, `investigation`, `proposed-solution`, `resolution`. Standalone commands do not run this validator.
 
 ## Validation
 

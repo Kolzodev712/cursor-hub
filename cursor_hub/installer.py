@@ -198,19 +198,24 @@ def read_pack_version(pack_dir: str) -> str | None:
 
 
 def copy_tools(repo_root: str, target: str, dry_run: bool) -> None:
-    """Copy hub tools/ into target/.cursor/tools/."""
+    """Merge hub tools/ into target/.cursor/tools/ (overwrite same filenames; keep extra files)."""
     src = os.path.join(repo_root, "tools")
     dst = os.path.join(target, CURSOR_DIR, TOOLS_DIR)
     if not os.path.isdir(src):
         return
     if dry_run:
-        print(f"[dry-run] would copy tools/ into {CURSOR_DIR}/{TOOLS_DIR}/")
+        print(f"[dry-run] would merge tools/ into {CURSOR_DIR}/{TOOLS_DIR}/")
         return
-    os.makedirs(os.path.dirname(dst), exist_ok=True)
-    if os.path.isdir(dst):
-        shutil.rmtree(dst)
-    shutil.copytree(src, dst, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
-    print(f"  Copied tools into {CURSOR_DIR}/{TOOLS_DIR}/ (run from project root: python {CURSOR_DIR}/{TOOLS_DIR}/new_design_log.py --slug <name>).")
+    os.makedirs(dst, exist_ok=True)
+    for name in os.listdir(src):
+        if name == "__pycache__" or name.endswith(".pyc"):
+            continue
+        src_file = os.path.join(src, name)
+        if not os.path.isfile(src_file):
+            continue
+        dst_file = os.path.join(dst, name)
+        shutil.copy2(src_file, dst_file)
+    print(f"  Merged tools into {CURSOR_DIR}/{TOOLS_DIR}/ (run from project root: python {CURSOR_DIR}/{TOOLS_DIR}/new_design_log.py --slug <name>).")
 
 
 def ensure_design_log_dir(target: str, dry_run: bool) -> None:
@@ -302,24 +307,29 @@ def expand_pack_names(
     pack_names: list[str],
     lang: list[str] | None,
 ) -> list[str]:
-    """Expand 'all', 'rust', and --lang into full pack lists. Dedupe, preserve order."""
+    """Expand 'all', language keys (rust, python, …), and --lang into full pack lists."""
     expanded: list[str] = []
-    if lang:
-        for l in lang:
-            packs_for_lang = LANGUAGE_PACK_SETS.get(l)
-            if not packs_for_lang:
-                known = ", ".join(sorted(LANGUAGE_PACK_SETS))
-                print(f"Warning: unknown language '{l}' (known: {known})")
-                continue
-            expanded.extend(packs_for_lang)
+    langs = list(lang) if lang else []
+    lang_keys_from_flags = set(langs)
+
+    for l in langs:
+        packs_for_lang = LANGUAGE_PACK_SETS.get(l)
+        if not packs_for_lang:
+            known = ", ".join(sorted(LANGUAGE_PACK_SETS))
+            print(f"Warning: unknown language '{l}' (known: {known})", file=sys.stderr)
+            continue
+        expanded.extend(packs_for_lang)
+
     for p in pack_names:
         if p == "all":
-            if lang:
-                expanded.extend(LANGUAGE_PACK_SETS.get(lang[0], ALL_RUST_PACKS))
-            else:
-                expanded.extend(ALL_RUST_PACKS)
-        elif p == "rust":
+            if langs:
+                # Full sets already added from each --lang; do not duplicate.
+                continue
             expanded.extend(ALL_RUST_PACKS)
+        elif p in LANGUAGE_PACK_SETS:
+            # Avoid duplicating a language bundle already supplied via --lang.
+            if p not in lang_keys_from_flags:
+                expanded.extend(LANGUAGE_PACK_SETS[p])
         else:
             expanded.append(p)
     seen: set[str] = set()

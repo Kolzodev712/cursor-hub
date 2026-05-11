@@ -51,7 +51,8 @@ def main() -> int:
     parser.add_argument(
         "packs",
         nargs="+",
-        help="Pack name(s) then target dir as last arg. Use 'all' for all Rust packs.",
+        help="Pack names (or language shorthand: rust/python/js-ts/terraform), then target dir as last arg unless using -t. "
+        "Use 'all' for the default Rust bundle when no --lang is given; with --lang, 'all' is optional (same packs as the language flags).",
     )
     args = parser.parse_args()
 
@@ -69,7 +70,12 @@ def main() -> int:
     repo_root = get_hub_root_for_script()
     if not repo_root:
         print(
-            "Error: Could not find cursor-hub root (run from inside the hub repo or run install.py from the hub's tools/ dir).",
+            "Error: Could not find cursor-hub pack source (directory containing packs/cursor/_shared).",
+            file=sys.stderr,
+        )
+        print(
+            "  Run from a hub clone or run this script from the hub's tools/ directory. "
+            "Install merges rules from the repository; a wheel without bundled packs cannot install.",
             file=sys.stderr,
         )
         return 1

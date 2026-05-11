@@ -4,12 +4,17 @@ Verify that a workflow step was recorded in the design log.
 Run this after a workflow command (not after standalone commands) to check that
 the design log was created or updated. Use --step to validate a specific step type.
 
+Modern logs append an exact stamp line when a workflow step finishes:
+  [cursor-hub workflow] step=<step-name>
+
+Legacy logs are still accepted if they contain the old section titles (see STEP_LEGACY_MARKERS).
+
 Usage:
   python .cursor/tools/validate_workflow_design_log.py [--step STEP] [--dir DESIGN_LOG_DIR]
   From project root after running a workflow command.
 
 Steps: design-review | implement | add-tests | investigation | proposed-solution | resolution
-Exit: 0 if a design log was updated with the expected section; 1 otherwise.
+Exit: 0 if validation passes; 1 otherwise.
 """
 from __future__ import annotations
 
@@ -18,52 +23,35 @@ import os
 import sys
 import time
 
-# Sections we expect per step (substrings to look for in file content).
-# Each step maps to one or more acceptable marker sets; a file passes if it
-# contains *all* markers for *any* one acceptable set.
-STEP_SECTION_SETS: dict[str, list[list[str]]] = {
-    # New slim decision/feature logs: Decision + Verification
-    # Legacy logs: Design discussion
-    "design-review": [["Decision", "Verification"], ["Design discussion"]],
-    # New slim logs: Implementation results
-    # Legacy logs: Implementation Results
-    "implement": [["Implementation results"], ["Implementation Results"]],
-    # New slim logs record tests under Verification
-    # Legacy logs: Test session
-    "add-tests": [["Verification"], ["Test session"]],
-    # New slim bugfix logs: Impact + Root cause
-    # Legacy logs: Investigation
-    "investigation": [["Impact", "Root cause"], ["Investigation"]],
-    # New slim bugfix logs: Fix + Caveats (and usually Verification plan)
-    # Legacy logs: Proposed solution + Trade-offs
-    "proposed-solution": [["Fix", "Caveats"], ["Proposed solution", "Trade-offs"]],
-    # New slim bugfix logs: Fix + Verification outcome
-    # Legacy logs: Resolution
-    "resolution": [["Fix", "Verification"], ["Resolution"]],
+WORKFLOW_STEP_STAMP_PREFIX = "[cursor-hub workflow] step="
+
+# Legacy-only section sets (substring match): all markers in one inner list must appear.
+STEP_LEGACY_MARKERS: dict[str, list[list[str]]] = {
+    "design-review": [["Design discussion"]],
+    "implement": [["Implementation Results"]],
+    "add-tests": [["Test session"]],
+    "investigation": [["Investigation"]],
+    "proposed-solution": [["Proposed solution", "Trade-offs"]],
+    "resolution": [["Resolution"]],
 }
 
-# All known section headers (for "any recent update" check)
 ALL_SECTION_MARKERS = [
     "Design discussion",
     "Investigation",
     "Proposed solution",
     "Trade-offs",
     "Resolution",
-    # Slim decision/feature logs
     "Problem / context",
     "Decision",
     "Alternatives",
     "Consequences",
     "Implementation results",
-    # Slim bugfix logs
     "Impact",
     "Detection / repro",
     "Root cause",
     "Fix",
     "Caveats / follow-ups",
-    # Common
     "Verification",
-    # Legacy
     "Implementation Results",
     "Test session",
 ]
@@ -98,27 +86,6 @@ def most_recent_md_file(log_dir: str) -> tuple[str | None, float]:
     return best_path, best_mtime
 
 
-def most_recent_matching_md_file(log_dir: str, marker_sets: list[list[str]]) -> tuple[str | None, float]:
-    """Return most recently modified .md file that matches any marker set."""
-    if not os.path.isdir(log_dir):
-        return None, 0.0
-    best_path = None
-    best_mtime = 0.0
-    for name in os.listdir(log_dir):
-        if not name.endswith(".md"):
-            continue
-        path = os.path.join(log_dir, name)
-        if not os.path.isfile(path):
-            continue
-        if not file_matches_any_marker_set(path, marker_sets):
-            continue
-        mtime = os.path.getmtime(path)
-        if mtime > best_mtime:
-            best_mtime = mtime
-            best_path = path
-    return best_path, best_mtime
-
-
 def file_contains_markers(path: str, markers: list[str]) -> bool:
     """Return True if file at path contains all of the given markers (substrings)."""
     try:
@@ -130,15 +97,73 @@ def file_contains_markers(path: str, markers: list[str]) -> bool:
 
 
 def file_matches_any_marker_set(path: str, marker_sets: list[list[str]]) -> bool:
-    """Return True if file contains all markers for any acceptable marker set."""
+    """Return True if file contains all markers for any acceptable set."""
+    if not marker_sets:
+        return False
     for markers in marker_sets:
         if file_contains_markers(path, markers):
             return True
     return False
 
 
+def file_has_workflow_stamp_for_step(path: str, step_id: str) -> bool:
+    """True if file contains an exact standalone line `[cursor-hub workflow] step=<step_id>`."""
+    expected = f"{WORKFLOW_STEP_STAMP_PREFIX}{step_id}"
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                if line.strip() == expected:
+                    return True
+    except OSError:
+        return False
+    return False
+
+
+def file_contains_any_stamp_line(path: str) -> bool:
+    """True if any line starts with WORKFLOW_STEP_STAMP_PREFIX after strip."""
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                if line.strip().startswith(WORKFLOW_STEP_STAMP_PREFIX):
+                    return True
+    except OSError:
+        return False
+    return False
+
+
+def file_matches_workflow_step(path: str, step_id: str) -> bool:
+    """Stamp line for this step, or legacy markers for this step."""
+    if file_has_workflow_stamp_for_step(path, step_id):
+        return True
+    legacy = STEP_LEGACY_MARKERS.get(step_id, [])
+    return file_matches_any_marker_set(path, legacy)
+
+
+def most_recent_matching_md_file_for_step(log_dir: str, step_id: str) -> tuple[str | None, float]:
+    """Return most recently modified .md file that matches this workflow step."""
+    if not os.path.isdir(log_dir):
+        return None, 0.0
+    best_path = None
+    best_mtime = 0.0
+    for name in os.listdir(log_dir):
+        if not name.endswith(".md"):
+            continue
+        path = os.path.join(log_dir, name)
+        if not os.path.isfile(path):
+            continue
+        if not file_matches_workflow_step(path, step_id):
+            continue
+        mtime = os.path.getmtime(path)
+        if mtime > best_mtime:
+            best_mtime = mtime
+            best_path = path
+    return best_path, best_mtime
+
+
 def file_contains_any_section(path: str) -> bool:
-    """Return True if file contains at least one of the known section markers."""
+    """Known design-log headers or any workflow stamp line."""
+    if file_contains_any_stamp_line(path):
+        return True
     try:
         with open(path, "r", encoding="utf-8") as f:
             content = f.read()
@@ -148,13 +173,11 @@ def file_contains_any_section(path: str) -> bool:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="Verify that a workflow step was recorded in the design log."
-    )
+    parser = argparse.ArgumentParser(description="Verify that a workflow step was recorded in the design log.")
     parser.add_argument(
         "--step",
-        choices=list(STEP_SECTION_SETS.keys()),
-        help="Workflow step that was just run (validates expected section is present).",
+        choices=list(STEP_LEGACY_MARKERS.keys()),
+        help="Workflow step that was just run.",
     )
     parser.add_argument(
         "--dir",
@@ -172,20 +195,25 @@ def main() -> int:
         return 1
 
     if args.step:
-        marker_sets = STEP_SECTION_SETS[args.step]
-        match_path, _match_mtime = most_recent_matching_md_file(log_dir, marker_sets)
+        match_path, _match_mtime = most_recent_matching_md_file_for_step(log_dir, args.step)
         if not match_path:
             print(
-                f"validate_workflow_design_log: expected section(s) for step '{args.step}' not found.",
+                f"validate_workflow_design_log: step '{args.step}' not recorded in any design log.",
                 file=sys.stderr,
             )
-            print(f"  Expected one of: {marker_sets}", file=sys.stderr)
+            print(
+                "  Expected an exact line: "
+                f"`{WORKFLOW_STEP_STAMP_PREFIX}{args.step}` "
+                "or legacy markers: "
+                f"{STEP_LEGACY_MARKERS[args.step]}",
+                file=sys.stderr,
+            )
             print(f"  Most recent file: {path}", file=sys.stderr)
             return 1
         print(f"OK: design log updated with {args.step} step: {os.path.basename(match_path)}")
         return 0
 
-    # No --step: require recent modification and at least one known section
+    # No --step: require recent modification and workflow-related content
     now = time.time()
     if now - mtime > RECENT_SECONDS:
         print(
@@ -197,12 +225,12 @@ def main() -> int:
         return 1
     if not file_contains_any_section(path):
         print(
-            "validate_workflow_design_log: no known workflow section found in recent file.",
+            "validate_workflow_design_log: no workflow-related content in recent file.",
             file=sys.stderr,
         )
         print(f"  File: {path}", file=sys.stderr)
         return 1
-    print(f"OK: recent design log with workflow section: {os.path.basename(path)}")
+    print(f"OK: recent design log with workflow content: {os.path.basename(path)}")
     return 0
 
 

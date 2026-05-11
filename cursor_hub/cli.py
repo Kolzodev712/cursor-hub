@@ -30,7 +30,13 @@ def cmd_install(args: argparse.Namespace) -> int:
     repo_root = _get_hub_root()
     if not repo_root:
         print(
-            "Error: Could not find cursor-hub root (run from inside the hub repo or install cursor-hub from the repo).",
+            "Error: Could not find cursor-hub pack source (directory containing packs/cursor/_shared).",
+            file=sys.stderr,
+        )
+        print(
+            "  Install merges rules from this repository; run from a hub clone or use "
+            "`pip install -e .` at the hub root. A standalone wheel without bundled packs "
+            "cannot install commands and rules.",
             file=sys.stderr,
         )
         return 1
@@ -78,7 +84,8 @@ def main() -> int:
     install_parser.add_argument(
         "packs",
         nargs="*",
-        help="Pack name(s) or 'all' for full set. If target is omitted, last arg is used as target.",
+        help="Pack name(s), language shorthand (rust/python/js-ts/terraform), or 'all' (default Rust set if no --lang). "
+        "With --lang, positional 'all' is optional. If target is omitted, last arg is used as target.",
     )
     install_parser.set_defaults(func=cmd_install)
 
@@ -93,9 +100,13 @@ def main() -> int:
             parsed.target = os.path.abspath(os.getcwd())
             parsed.packs = ["all"]
         elif len(packs) == 1:
-            # One arg: either "all"/pack name (target=cwd) or path (packs=all, target=arg)
+            # One arg: either pack name / language shorthand (target=cwd) or path (packs=all, target=arg)
             one = packs[0]
-            if one in ("all", "rust") or one in installer.LANGUAGE_PACK_SETS or one.startswith(("rust-", "python-", "js-ts-", "terraform-", "design-log", "documentation", "security")):
+            if (
+                one == "all"
+                or one in installer.LANGUAGE_PACK_SETS
+                or one.startswith(("rust-", "python-", "js-ts-", "terraform-", "design-log", "documentation", "security"))
+            ):
                 parsed.target = os.path.abspath(os.getcwd())
             else:
                 parsed.target = os.path.abspath(one)

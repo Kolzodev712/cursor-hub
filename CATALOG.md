@@ -104,7 +104,7 @@ You drive the inputs; the model refuses to propose solutions or write code until
 
 **Commands:** design-log__create (create new log with template), design-log__record-step (manually record a step).
 
-**Workflow verification:** Workflow commands (not standalone) run `python .cursor/tools/validate_workflow_design_log.py --step <step>` after recording; the script checks that the expected section is present in the design log. If it fails, the model is instructed to add the missing content and re-run until it passes.
+**Workflow verification:** Workflow commands (not standalone) run `python .cursor/tools/validate_workflow_design_log.py --step <step>` after recording. The script expects either an exact line **`[cursor-hub workflow] step=<step>`** (for slim templates) **or** the older legacy section titles for that step. If validation fails, add the missing log content **and/or** the stamp line and re-run until it passes.
 
 **Agents:** `design-log.md`.
 
