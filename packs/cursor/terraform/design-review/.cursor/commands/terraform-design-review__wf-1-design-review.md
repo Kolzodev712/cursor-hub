@@ -1,4 +1,4 @@
-# Design review (python-design-review WF Step 1)
+# Design review (terraform-design-review WF Step 1)
 
 Strict, critical design review. Question assumptions and produce a recommended option with risks and verification. You can use this command on its own — no requirement to run implementation or testing afterward.
 
@@ -13,5 +13,5 @@ Strict, critical design review. Question assumptions and produce a recommended o
 5. **Recommendation:** State the recommended option and why; call out remaining risks.
 6. **Verification:** Define how we will verify the design (tests, type checks, invariants).
 7. **Output:** Summarize in a short block: Recommended option, Risks, Verification steps.
-8. **Record in design log (mandatory):** Create or update the design log as part of this response. If a log for this workstream already exists, append a **Design discussion** section. If no log exists, run `python .cursor/tools/new_design_log.py --slug <short-name>` (or fallback: list `./.cursor/design-log/`, take max NNN + 1, create the file) and fill with at least Background/Problem/Design discussion. Create logs only in `./.cursor/design-log/`. Do not ask — do it.
-9. **Verify:** Run `python .cursor/tools/validate_workflow_design_log.py --step design-review` from the project root. If it fails, add the missing Design discussion content and re-run. Do not consider the command complete until the validator passes.
+8. **Record in design log (mandatory):** Create or update the design log as part of this response. If a log for this workstream already exists, update/append the fields under: **Problem / context**, **Decision**, **Alternatives**, **Consequences**, **Verification**. If no log exists, run `python .cursor/tools/new_design_log.py --slug <short-name>` (or fallback: list `./.cursor/design-log/`, take max NNN + 1, create the file). Keep it short and durable; do not write a transcript. Create logs only in `./.cursor/design-log/`. Do not ask — do it.
+9. **Verify:** Run `python .cursor/tools/validate_workflow_design_log.py --step design-review` from the project root. If it fails, add the missing decision/verification content and re-run. Do not consider the command complete until the validator passes.

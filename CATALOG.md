@@ -15,7 +15,7 @@ There are **two ways** to use commands:
 
 **Contents:**
 
-- **Rules:** `design-log.mdc` — when to log, log structure (Background → Problem → Q/A → Design → Plan → Examples → Trade-offs → Verification → Implementation Results), deterministic creation via `.cursor/tools/new_design_log.py --slug <name>`; logs live in `.cursor/design-log/`. `present-before-writing.mdc` — for new rules, commands, or design-log sections beyond the template: present full draft and wait for explicit approval before writing files (applies when working on the hub or generating hub artifacts).
+- **Rules:** `design-log.mdc` — when to log and the slim log templates (Decision/feature vs Bugfix), deterministic creation via `.cursor/tools/new_design_log.py --slug <name>` (use `--kind bugfix` for bugfix logs); logs live in `.cursor/design-log/`. `present-before-writing.mdc` — for new rules, commands, or design-log sections beyond the template: present full draft and wait for explicit approval before writing files (applies when working on the hub or generating hub artifacts).
 
 **No commands or agents.** Other packs add those.
 
@@ -28,8 +28,8 @@ Each pack has its own workflow step numbering. Use design review, implement, and
 | Pack | Command | Description |
 |------|---------|-------------|
 | **rust-design-review** | `/rust-design-review__wf-1-design-review` | Strict design review: critical questions, alternatives, recommended option, risks, verification. Design log created or updated automatically. |
-| **rust-implementation** | `/rust-implementation__wf-1-implement-module` | Implement from the design log; cite log; stepwise phases; verification loop; Implementation Results appended automatically. |
-| **rust-testing** | `/rust-testing__wf-1-add-tests-only` | Add or extend tests only; no prod code changes; justify coverage. Test session recorded in the design log automatically. |
+| **rust-implementation** | `/rust-implementation__wf-1-implement-module` | Implement from the design log; cite log; stepwise phases; verification loop; **Implementation results** appended automatically. |
+| **rust-testing** | `/rust-testing__wf-1-add-tests-only` | Add or extend tests only; no prod code changes; justify coverage. **Verification** updated in the design log automatically. |
 
 **Design log (manual):** To create a new log without running a workflow step, use `/design-log__create`. To record a step manually, use `/design-log__record-step`.
 

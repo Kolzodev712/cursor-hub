@@ -5,6 +5,7 @@ Run from project root, or use --dir to point at a repo's .cursor/design-log (wor
 
 Usage:
   python .cursor/tools/new_design_log.py --slug <short-name>   # from project root
+  python .cursor/tools/new_design_log.py --slug <short-name> --kind bugfix
   python .cursor/tools/new_design_log.py --slug <short-name> --dir /path/to/repo/.cursor/design-log
 
 Prints the created file path on stdout. Exit non-zero on error.
@@ -19,25 +20,35 @@ import sys
 
 
 DEFAULT_DIR = ".cursor/design-log"
-TEMPLATE_HEADER = """# {title}
+TEMPLATE_DECISION = """# {title}
 
-## Background
+## Problem / context
 
-## Problem
+## Decision
 
-## Questions and Answers
+## Alternatives
 
-## Design
-
-## Implementation Plan
-
-## Examples
-
-## Trade-offs
+## Consequences
 
 ## Verification
 
-## Implementation Results
+## Implementation results
+
+"""
+
+TEMPLATE_BUGFIX = """# {title}
+
+## Impact
+
+## Detection / repro
+
+## Root cause
+
+## Fix
+
+## Caveats / follow-ups
+
+## Verification
 
 """
 
@@ -79,6 +90,7 @@ def ensure_readme(log_dir: str) -> None:
     with open(readme, "w", encoding="utf-8") as f:
         f.write("# Design Log\n\nDesign decisions and implementation notes live here as `NNN-short-name.md`.\n")
         f.write("Create new entries with: `python .cursor/tools/new_design_log.py --slug <short-name>`\n")
+        f.write("For bugfix logs: `python .cursor/tools/new_design_log.py --slug bugfix-<name> --kind bugfix`\n")
 
 
 def main() -> int:
@@ -86,6 +98,12 @@ def main() -> int:
     parser.add_argument("--slug", required=True, help="Short kebab-case name (e.g. risk-cache)")
     parser.add_argument("--dir", default=None, help=f"Design log directory (default: <project root>/{DEFAULT_DIR})")
     parser.add_argument("--title", default=None, help="Human-readable title (default: derived from slug)")
+    parser.add_argument(
+        "--kind",
+        choices=["decision", "bugfix"],
+        default="decision",
+        help="Template kind: decision (default) or bugfix",
+    )
     args = parser.parse_args()
 
     slug = args.slug.strip().lower().replace(" ", "-")
@@ -111,7 +129,8 @@ def main() -> int:
     filename = f"{next_n:03d}-{slug}.md"
     filepath = os.path.join(log_dir, filename)
 
-    content = TEMPLATE_HEADER.format(title=title)
+    template = TEMPLATE_BUGFIX if args.kind == "bugfix" else TEMPLATE_DECISION
+    content = template.format(title=title)
     with open(filepath, "w", encoding="utf-8") as f:
         f.write(content)
 

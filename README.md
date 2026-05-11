@@ -35,7 +35,7 @@ python tools/install.py --lang python all ../my-project
 
 You can also run `python -m cursor_hub install all .` from the hub repo without installing the package.
 
-The installer copies packs into the target's `.cursor/` (rules, commands, agents, design-log, tools). Then run `python .cursor/tools/new_design_log.py --slug <name>` from the target project root.
+The installer copies packs into the target's `.cursor/` (rules, commands, agents, design-log, tools). Then run `python .cursor/tools/new_design_log.py --slug <name>` from the target project root (use `--kind bugfix` for bugfix logs).
 
 ### Examples (Unix / macOS)
 
@@ -82,6 +82,7 @@ To create the next design log file **without guessing the number**:
 
 - **From your project root** (after installing packs, tools are in `.cursor/tools/`):  
   `python .cursor/tools/new_design_log.py --slug short-name`
+  - For bugfix logs: `python .cursor/tools/new_design_log.py --slug bugfix-short-name --kind bugfix`
 - **From the hub repo** (e.g. hub as submodule, creating a log in a project):  
   `python tools/new_design_log.py --slug short-name --dir /path/to/your/project/.cursor/design-log`
 

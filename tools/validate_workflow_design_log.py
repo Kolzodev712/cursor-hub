@@ -18,25 +18,54 @@ import os
 import sys
 import time
 
-# Sections we expect per step (substrings to look for in file content)
-STEP_SECTIONS = {
-    "design-review": ["Design discussion"],
-    "implement": ["Implementation Results"],
-    "add-tests": ["Test session"],
-    "investigation": ["Investigation"],
-    "proposed-solution": ["Proposed solution", "Trade-offs"],
-    "resolution": ["Resolution"],
+# Sections we expect per step (substrings to look for in file content).
+# Each step maps to one or more acceptable marker sets; a file passes if it
+# contains *all* markers for *any* one acceptable set.
+STEP_SECTION_SETS: dict[str, list[list[str]]] = {
+    # New slim decision/feature logs: Decision + Verification
+    # Legacy logs: Design discussion
+    "design-review": [["Decision", "Verification"], ["Design discussion"]],
+    # New slim logs: Implementation results
+    # Legacy logs: Implementation Results
+    "implement": [["Implementation results"], ["Implementation Results"]],
+    # New slim logs record tests under Verification
+    # Legacy logs: Test session
+    "add-tests": [["Verification"], ["Test session"]],
+    # New slim bugfix logs: Impact + Root cause
+    # Legacy logs: Investigation
+    "investigation": [["Impact", "Root cause"], ["Investigation"]],
+    # New slim bugfix logs: Fix + Caveats (and usually Verification plan)
+    # Legacy logs: Proposed solution + Trade-offs
+    "proposed-solution": [["Fix", "Caveats"], ["Proposed solution", "Trade-offs"]],
+    # New slim bugfix logs: Fix + Verification outcome
+    # Legacy logs: Resolution
+    "resolution": [["Fix", "Verification"], ["Resolution"]],
 }
 
 # All known section headers (for "any recent update" check)
 ALL_SECTION_MARKERS = [
     "Design discussion",
-    "Implementation Results",
-    "Test session",
     "Investigation",
     "Proposed solution",
     "Trade-offs",
     "Resolution",
+    # Slim decision/feature logs
+    "Problem / context",
+    "Decision",
+    "Alternatives",
+    "Consequences",
+    "Implementation results",
+    # Slim bugfix logs
+    "Impact",
+    "Detection / repro",
+    "Root cause",
+    "Fix",
+    "Caveats / follow-ups",
+    # Common
+    "Verification",
+    # Legacy
+    "Implementation Results",
+    "Test session",
 ]
 
 # Consider "recent" if modified within this many seconds (when --step not given)
@@ -69,14 +98,43 @@ def most_recent_md_file(log_dir: str) -> tuple[str | None, float]:
     return best_path, best_mtime
 
 
-def file_contains_sections(path: str, sections: list[str]) -> bool:
-    """Return True if file at path contains all of the given section markers (substrings)."""
+def most_recent_matching_md_file(log_dir: str, marker_sets: list[list[str]]) -> tuple[str | None, float]:
+    """Return most recently modified .md file that matches any marker set."""
+    if not os.path.isdir(log_dir):
+        return None, 0.0
+    best_path = None
+    best_mtime = 0.0
+    for name in os.listdir(log_dir):
+        if not name.endswith(".md"):
+            continue
+        path = os.path.join(log_dir, name)
+        if not os.path.isfile(path):
+            continue
+        if not file_matches_any_marker_set(path, marker_sets):
+            continue
+        mtime = os.path.getmtime(path)
+        if mtime > best_mtime:
+            best_mtime = mtime
+            best_path = path
+    return best_path, best_mtime
+
+
+def file_contains_markers(path: str, markers: list[str]) -> bool:
+    """Return True if file at path contains all of the given markers (substrings)."""
     try:
         with open(path, "r", encoding="utf-8") as f:
             content = f.read()
     except OSError:
         return False
-    return all(marker in content for marker in sections)
+    return all(marker in content for marker in markers)
+
+
+def file_matches_any_marker_set(path: str, marker_sets: list[list[str]]) -> bool:
+    """Return True if file contains all markers for any acceptable marker set."""
+    for markers in marker_sets:
+        if file_contains_markers(path, markers):
+            return True
+    return False
 
 
 def file_contains_any_section(path: str) -> bool:
@@ -95,7 +153,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--step",
-        choices=list(STEP_SECTIONS.keys()),
+        choices=list(STEP_SECTION_SETS.keys()),
         help="Workflow step that was just run (validates expected section is present).",
     )
     parser.add_argument(
@@ -114,16 +172,17 @@ def main() -> int:
         return 1
 
     if args.step:
-        sections = STEP_SECTIONS[args.step]
-        if not file_contains_sections(path, sections):
+        marker_sets = STEP_SECTION_SETS[args.step]
+        match_path, _match_mtime = most_recent_matching_md_file(log_dir, marker_sets)
+        if not match_path:
             print(
                 f"validate_workflow_design_log: expected section(s) for step '{args.step}' not found.",
                 file=sys.stderr,
             )
-            print(f"  Expected one of: {sections}", file=sys.stderr)
-            print(f"  File: {path}", file=sys.stderr)
+            print(f"  Expected one of: {marker_sets}", file=sys.stderr)
+            print(f"  Most recent file: {path}", file=sys.stderr)
             return 1
-        print(f"OK: design log updated with {args.step} step: {os.path.basename(path)}")
+        print(f"OK: design log updated with {args.step} step: {os.path.basename(match_path)}")
         return 0
 
     # No --step: require recent modification and at least one known section

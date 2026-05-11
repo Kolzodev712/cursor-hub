@@ -27,8 +27,8 @@ Each pack has its own step numbering. Use design review, implement, and/or add t
 | Pack | Command | When to use it |
 |------|---------|----------------|
 | **rust-design-review** (or **python-** / **js-ts-** / **terraform-design-review**) | `/<lang>-design-review__wf-1-design-review` | Get critical questions, alternatives, recommended option, risks, verification. Design log is created/updated automatically at the end. |
-| **rust-implementation** (or python-/js-ts-/terraform-implementation) | `/<lang>-implementation__wf-1-implement-module` | Implement from the design log; stepwise; verification loop; Implementation Results appended automatically. |
-| **rust-testing** (or python-/js-ts-/terraform-testing) | `/<lang>-testing__wf-1-add-tests-only` | Add tests for new behavior. Test session recorded in the design log automatically. |
+| **rust-implementation** (or python-/js-ts-/terraform-implementation) | `/<lang>-implementation__wf-1-implement-module` | Implement from the design log; stepwise; verification loop; **Implementation results** appended automatically. |
+| **rust-testing** (or python-/js-ts-/terraform-testing) | `/<lang>-testing__wf-1-add-tests-only` | Add tests for new behavior. **Verification** updated in the design log automatically. |
 
 **Manual design log:** To create a new log without running a workflow step, use `/design-log__create`. To record a step manually, use `/design-log__record-step`.
 
@@ -104,8 +104,8 @@ Use the command for the task; the agent is built into that command.
 Replace `<lang>` with `rust`, `python`, `js-ts`, or `terraform` depending on your project.
 
 1. **Design:** Run `/<lang>-design-review__wf-1-design-review` and describe the problem; get questions, alternatives, recommendation. The design log is created or updated automatically at the end.
-2. **Implement:** Run `/<lang>-implementation__wf-1-implement-module` and point to the design log; it implements stepwise and runs verification. Implementation Results are appended automatically.
-3. **Test:** Run `/<lang>-testing__wf-1-add-tests-only` for coverage. Test session is recorded in the design log automatically.
+2. **Implement:** Run `/<lang>-implementation__wf-1-implement-module` and point to the design log; it implements stepwise and runs verification. **Implementation results** are appended automatically.
+3. **Test:** Run `/<lang>-testing__wf-1-add-tests-only` for coverage. **Verification** is updated in the design log automatically.
 4. **Bugfix (separate flow):** For a small bug use `/<lang>-bugfix__standalone-fix-small-bug`. For a non-trivial bug use the 3-step workflow: `/<lang>-bugfix__wf-1-investigation` → `/<lang>-bugfix__wf-2-proposed-solution` → `/<lang>-bugfix__wf-3-resolution` (each step records in the design log).
 5. **Review (optional):** Run `/<lang>-review__standalone-pr-review` or `/<lang>-review__standalone-risky-changes-scan` on the changes.
 
