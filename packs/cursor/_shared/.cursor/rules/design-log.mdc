@@ -74,7 +74,7 @@ Use for: non-trivial bugs or bugs with a non-obvious root cause / invariant. Ski
 
 ### Workflow commands — validation stamp
 
-Commands in the design-review / implementation / testing / bugfix workflows run `python .cursor/tools/validate_workflow_design_log.py --step <step>` after recording. For **slim** logs, append exactly one standalone line **`[cursor-hub workflow] step=<same-as-step>`** when that workflow step completes (workflow instructions spell this out). **Legacy** logs that use only older section headings (for example **Design discussion** or **Implementation Results**) can still validate without this line.
+Commands in the design-review / implementation / testing / bugfix / *-refactor workflows run `python .cursor/tools/validate_workflow_design_log.py --step <step>` after recording. For **slim** logs, append exactly one standalone line **`[cursor-hub workflow] step=<same-as-step>`** when that workflow step completes (workflow instructions spell this out). **Legacy** logs that use only older section headings (for example **Design discussion** or **Implementation Results**) can still validate without this line.
 
 ## When Implementing
 

@@ -7,8 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`skills/rust-best-practices` Cursor skill** — `SKILL.md` plus reference maps for [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/checklist.html) and distilled [Project Rules Rust](https://www.projectrules.ai/rules/rust) themes; documented in [skills/README.md](skills/README.md); not merged by pack install (manual copy/symlink to `.cursor/skills/`).
+- **`*-refactor` packs (`rust-refactor`, `python-refactor`, `js-ts-refactor`)** — Parallel 3-step workflow: wf-1 assess fit vs alternatives, wf-2 execute refactor with language-appropriate verification, wf-3 verify improvement vs acceptance criteria. Design log sections **Refactor assessment**, **Refactor implementation**, **Refactor outcome review**; validator steps `refactor-assessment`, `refactor-implement`, `refactor-outcome-review` (shared script). Included in **`--lang rust`**, **`--lang python`**, and **`--lang js-ts`** installs.
+
 ### Changed
 
+- **rust-implementation** — Added **`rust-best-practices-skill.mdc`** (`**/*.rs`, `**/Cargo.toml`, `**/build.rs`): agents must read **`.cursor/skills/rust-best-practices/SKILL.md`** when present before substantive Rust / API work; points at local **`reference-*.md`**. Pack version **0.3.1**.
+- **Installer → design-log safety** — Merges only `.cursor/rules`, `.cursor/commands`, `.cursor/agents` from packs, plus hub `tools/` (`CURSOR_SUBDIRS_MERGED_FROM_PACKS`). Targets’ **numbered design logs (`NNN-*.md`) are never modified**. New **`--refresh-design-log-readme`** overwrites **`README.md` only** when you want the hub blurb synced. **`validate_packs`** fails if any pack ships `.cursor/design-log/` content (audit guarantee).
 - **Installer** — `expand_pack_names`: language shorthand (`rust` / `python` / `js-ts` / `terraform`) installs that language bundle; `--lang …` combined with positional `all` no longer duplicates packs; repeating the same language in `--lang` and as a positional is deduped. `cursor-hub install <lang>` is consistent across languages (not only Rust).
 - **Tools merge** — `copy_tools` merges files into `.cursor/tools/` instead of deleting the folder (local scripts alongside hub tools are preserved).
 - **Workflow design-log validator** — Requires `[cursor-hub workflow] step=<step>` for slim logs (legacy section-only logs still validate). Documentation and workflow commands describe the stamp; CLI hints when hub pack source cannot be found (PyPI wheels without packs).

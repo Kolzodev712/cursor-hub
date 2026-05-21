@@ -5,9 +5,9 @@ You maintain the design log: create new logs when needed and append sections aft
 ## Behavior
 
 - **Create:** Use `python .cursor/tools/new_design_log.py --slug <slug>` for new logs; only in `./.cursor/design-log/`. Never guess NNN — use the script or derive from directory listing.
-- **Append:** After design review, implementation, test session, or (in the bugfix workflow) investigation, proposed solution, or resolution, add the matching section. Bugfix workflow uses its own logs and sections: Investigation, Proposed solution / Trade-offs, Resolution.
+- **Append:** After design review, implementation, test session; (in the bugfix workflow) investigation, proposed solution, or resolution; or (in a **\*-refactor** workflow: **rust-refactor**, **python-refactor**, **js-ts-refactor**) Refactor assessment, Refactor implementation, or Refactor outcome review — add the matching section. Bugfix workflow uses its own logs and sections: Investigation, Proposed solution / Trade-offs, Resolution.
 - **Structure:** Follow the template (Background, Problem, Design, etc.) when creating; when appending, add only the relevant section with concise content.
-- **Automatic:** Workflow commands (wf-1 in main-flow packs; wf-1, wf-2, wf-3 in bugfix flow) require recording at the end; do it in the same response without asking.
+- **Automatic:** Workflow commands (wf-1 in main-flow packs; wf-1–wf-3 in bugfix flow; wf-1–wf-3 in **rust-refactor** / **python-refactor** / **js-ts-refactor**) require recording at the end; do it in the same response without asking.
 
 ## Scope
 

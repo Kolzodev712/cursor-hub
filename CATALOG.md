@@ -2,10 +2,11 @@
 
 Packs live under `packs/cursor/`. Each has a `pack.yml` and optional `.cursor/rules/`, `.cursor/commands/`, `.cursor/agents/`. Command filenames use the `pack-name__command-name` convention so installing multiple packs does not collide.
 
-There are **two ways** to use commands:
+There are **three ways** to use commands:
 
 1. **Main workflow** — Use design review, implement, and/or add tests in any order or on their own. Each pack numbers its own workflow steps (e.g. rust-design-review has wf-1, rust-implementation has wf-1, rust-testing has wf-1). The **design log is created or updated automatically** at the end of each workflow command. To create a log manually, use `/design-log__create`.
-2. **Standalone commands** — Use when you have a specific need (strict gates, refactor, PR review, decision summary); not part of a linear flow.
+2. **Other structured flows** — **Bugfix** (investigation → proposed solution → resolution) and **Refactor** (assessment → execute → verify improvement, for Rust / Python / JS/TS) are linear multi-step flows; see below.
+3. **Standalone commands** — Use when you have a specific need (strict gates, small safe refactor, PR review, decision summary); not part of a numbered workflow.
 
 ---
 
@@ -48,6 +49,22 @@ Each pack has its own workflow step numbering. Use design review, implement, and
 
 ---
 
+## Refactor workflow (Rust, Python, JS/TS)
+
+**Linear assessment → refactor → improvement review.** Challenge whether an abstraction or dependency **still earns its place**, execute phased changes aligned with that assessment, then **verify improvement** against explicit criteria—not only that tests/lint/tsc pass. Separate from main design → implement → test.
+
+**Safer-but-narrow standalone refactors:** behavior-preserving cleanups → `/<lang>-implementation__standalone-refactor-safe`.
+
+| Step | Rust | Python | JS/TS |
+|------|------|--------|-------|
+| **1. Assess fit & alternatives** | `/rust-refactor__wf-1-assess-fit-and-alternatives` | `/python-refactor__wf-1-assess-fit-and-alternatives` | `/js-ts-refactor__wf-1-assess-fit-and-alternatives` |
+| **2. Execute refactor** | `/rust-refactor__wf-2-execute-refactor` | `/python-refactor__wf-2-execute-refactor` | `/js-ts-refactor__wf-2-execute-refactor` |
+| **3. Verify improvement** | `/rust-refactor__wf-3-verify-improvement` | `/python-refactor__wf-3-verify-improvement` | `/js-ts-refactor__wf-3-verify-improvement` |
+
+**Design log (all three stacks):** **Refactor assessment** → **Refactor implementation** → **Refactor outcome review**; stamps `refactor-assessment`, `refactor-implement`, `refactor-outcome-review` (same validator flags for every language).
+
+---
+
 ## Standalone commands
 
 Use when you have a specific need. **Not** intended to be followed in the structured order above.
@@ -72,7 +89,9 @@ You drive the inputs; the model refuses to propose solutions or write code until
 
 | Command | Description |
 |--------|-------------|
-| `/rust-implementation__standalone-refactor-safe` | Plan 3–6 steps; limit files per step; run tests after each step; no behavior change. |
+| `/rust-implementation__standalone-refactor-safe` | Plan 3–6 steps; limit files per step; run tests after each step; no behavior change (`cargo`; lighter than **rust-refactor** wf‑1–3). |
+| `/python-implementation__standalone-refactor-safe` | Same intent for Python (format/lint/test each step; lighter than **python-refactor** wf‑1–3). |
+| `/js-ts-implementation__standalone-refactor-safe` | Same intent for JS/TS (lint/typecheck/test each step; lighter than **js-ts-refactor** wf‑1–3). |
 | `/rust-review__standalone-pr-review` | File-by-file review with must-fix vs nice-to-have. |
 | `/rust-review__standalone-risky-changes-scan` | Flag unsafe, unwrap, panics, new deps, public API breaks. |
 
@@ -98,7 +117,7 @@ You drive the inputs; the model refuses to propose solutions or write code until
 
 ### design-log
 
-**Purpose:** Create and update design logs. Main workflow (wf-1 in each of design-review, implementation, testing) and bugfix workflow (wf-1, wf-2, wf-3) record automatically at the end of each step; this pack provides the manual commands and the recording rule.
+**Purpose:** Create and update design logs. Main workflow (wf-1 per design-review/implementation/testing), bugfix wf-1–wf-3, and **refactor** wf‑1–wf‑3 (**rust-refactor**, **python-refactor**, **js-ts-refactor**) record automatically where applicable; this pack provides manual commands and the recording rule reference.
 
 **Rules:** `design-log-record.mdc` — how to create/append after each workflow step.
 
@@ -123,7 +142,7 @@ You drive the inputs; the model refuses to propose solutions or write code until
 
 **Purpose:** Small diffs, verification loop, Rust anti-footguns.
 
-**Rules:** `rust-core.mdc`, `rust-anti-footguns.mdc`.
+**Rules:** `rust-core.mdc`, `rust-best-practices-skill.mdc`, `rust-anti-footguns.mdc`, `rust-design-patterns.mdc`, `rust-error-handling.mdc`.
 
 **Commands (structured):** wf-1-implement-module (step 1).  
 **Commands (standalone):** gate-impl, standalone-refactor-safe.
@@ -162,6 +181,36 @@ You drive the inputs; the model refuses to propose solutions or write code until
 
 **Agents:** `rust-bugfix.md`.
 
+### rust-refactor
+
+**Purpose:** Three-step Rust workflow: assess fit vs alternatives (engineering + language practice), execute refactor, verify the result is an improvement.
+
+**Rules:** `rust-refactor.mdc`.
+
+**Commands (workflow):** wf-1-assess-fit-and-alternatives, wf-2-execute-refactor, wf-3-verify-improvement.
+
+**Agents:** `refactor-suitability-analyst.md`, `refactor-engineer.md`, `refactor-outcome-verifier.md`.
+
+### python-refactor
+
+**Purpose:** Same three-step refactor flow as Rust, for Python (engineering + idiomatic Python).
+
+**Rules:** `python-refactor.mdc`.
+
+**Commands (workflow):** wf-1-assess-fit-and-alternatives, wf-2-execute-refactor, wf-3-verify-improvement.
+
+**Agents:** `refactor-suitability-analyst.md`, `refactor-engineer.md`, `refactor-outcome-verifier.md`.
+
+### js-ts-refactor
+
+**Purpose:** Same three-step refactor flow for JavaScript / TypeScript.
+
+**Rules:** `js-ts-refactor.mdc`.
+
+**Commands (workflow):** wf-1-assess-fit-and-alternatives, wf-2-execute-refactor, wf-3-verify-improvement.
+
+**Agents:** `refactor-suitability-analyst.md`, `refactor-engineer.md`, `refactor-outcome-verifier.md`.
+
 ### documentation
 
 **Purpose:** Produce documentation on demand — architecture, feature, workflow, and bug summaries. All commands are standalone; no workflow or design log required.
@@ -182,12 +231,12 @@ You drive the inputs; the model refuses to propose solutions or write code until
 
 ## Language packs (Python, JS/TS, Terraform)
 
-The same workflow structure (design-review → implementation → testing, plus bugfix and review) is available for **Python**, **JS/TS**, and **Terraform**. Each language has five packs mirroring the Rust packs; install with `--lang <language>`.
+The same workflow structure (design-review → implementation → testing, plus bugfix and review) is available for **Python**, **JS/TS**, and **Terraform**. **Rust**, **Python**, and **JS/TS** additionally ship a **\*-refactor** workflow pack (Terraform does not yet). Install with `--lang <language>`.
 
 | Language   | Packs (use with `--lang python` / `--lang js-ts` / `--lang terraform`) |
 |-----------|-----------------------------------------------------------------------|
-| **Python**   | design-log, python-design-review, python-implementation, python-testing, python-bugfix, python-review, documentation, security |
-| **JS/TS**    | design-log, js-ts-design-review, js-ts-implementation, js-ts-testing, js-ts-bugfix, js-ts-review, documentation, security |
+| **Python**   | design-log, python-design-review, python-implementation, python-testing, python-bugfix, python-review, python-refactor, documentation, security |
+| **JS/TS**    | design-log, js-ts-design-review, js-ts-implementation, js-ts-testing, js-ts-bugfix, js-ts-review, js-ts-refactor, documentation, security |
 | **Terraform**| design-log, terraform-design-review, terraform-implementation, terraform-testing, terraform-bugfix, terraform-review, documentation, security |
 
 **Workflow commands** (same pattern as Rust; substitute the pack prefix):
@@ -197,8 +246,9 @@ The same workflow structure (design-review → implementation → testing, plus 
 - Testing: `/<lang>-testing__wf-1-add-tests-only`, `/<lang>-testing__gate-test`
 - Bugfix: `/<lang>-bugfix__standalone-fix-small-bug`, `/<lang>-bugfix__wf-1-investigation`, `/<lang>-bugfix__wf-2-proposed-solution`, `/<lang>-bugfix__wf-3-resolution`
 - Review: `/<lang>-review__standalone-pr-review`, `/<lang>-review__standalone-risky-changes-scan`
+- Refactor (Rust / Python / JS/TS only): `/<stack>-refactor__wf-1-assess-fit-and-alternatives`, `wf-2-execute-refactor`, `wf-3-verify-improvement` where `<stack>` is `rust`, `python`, or `js-ts`
 
-Where `<lang>` is `python`, `js-ts`, or `terraform`. Rules and agents are language-specific (e.g. Python: pytest, black/ruff; JS/TS: npm test, ESLint; Terraform: terraform fmt/validate, state/sensitive checks).
+Where `<lang>` is `python`, `js-ts`, or `terraform`. The **Refactor** line uses **`/<stack>-refactor__…`** with `<stack>` in `rust`, `python`, or `js-ts` (Rust pack reference is documented in the Rust refactor section above; there is no `terraform-refactor`). Rules and agents are language-specific (e.g. Python: pytest, black/ruff; JS/TS: npm test, ESLint; Terraform: terraform fmt/validate, state/sensitive checks).
 
 ---
 
@@ -223,3 +273,5 @@ python tools/install.py --lang terraform /path/to/project
 ```
 
 Example: `cursor-hub install --lang rust .` or `python tools/install.py --lang rust /path/to/your/project`
+
+**Design logs:** Re-running install **never** deletes or merges over `NNN-*.md` files in `.cursor/design-log/`. Hub packs intentionally **do not** ship `.cursor/design-log/` (validated by `python tools/validate_packs.py`). The installer ensures the directory exists and adds `README.md` only when it is missing, unless you pass **`--refresh-design-log-readme`** (README overwrite only).

@@ -24,6 +24,8 @@ Scenario: add a "config from env" feature to a Rust binary. Use the **main workf
 
 **Bugfix (separate workflow):** For a small bug use **`/rust-bugfix__standalone-fix-small-bug`**. For a non-trivial bug use the 3-step flow: **`/rust-bugfix__wf-1-investigation`** → **`/rust-bugfix__wf-2-proposed-solution`** → **`/rust-bugfix__wf-3-resolution`** (e.g. *Config panics when PREFIX_PORT is not a number* — each step records in its own design log).
 
+**Refactor workflow (Rust / Python / JS/TS):** When an abstraction or dependency needs a **honest usefulness review** plus **proof** the change helped—not just “tests pass”—run wf-1 → wf-2 → wf-3 for your stack **`/rust-refactor__…`**, **`/python-refactor__…`**, or **`/js-ts-refactor__…`** (`wf-1-assess-fit-and-alternatives`, `wf-2-execute-refactor`, `wf-3-verify-improvement`). For **behavior-preserving cleanup only**, use **`/rust-implementation__standalone-refactor-safe`**, **`/python-implementation__standalone-refactor-safe`**, or **`/js-ts-implementation__standalone-refactor-safe`** (lighter).
+
 **Manual design log:** To create a new log without running a workflow step (e.g. start a log before design), use **`/design-log__create`** — *slug: config-from-env*.
 
 **Optional — Review**
@@ -50,7 +52,9 @@ Use these **instead of** or **in addition to** the main workflow when they fit.
 | Command | Use when |
 |---------|----------|
 | `/rust-design-review__standalone-decision-summary` | You want a short block summarizing the decision and rejected alternatives (e.g. to paste into a log). |
-| `/rust-implementation__standalone-refactor-safe` | Refactor without behavior change; 3–6 steps, tests after each. |
+| `/rust-implementation__standalone-refactor-safe` | Refactor Rust without behavior change (lighter than `*-refactor` wf‑1–3). |
+| `/python-implementation__standalone-refactor-safe` | Same intent for Python. |
+| `/js-ts-implementation__standalone-refactor-safe` | Same intent for JS/TS. |
 | `/rust-review__standalone-pr-review`, `/rust-review__standalone-risky-changes-scan` | Review a PR or scan for risky patterns. |
 | `/documentation__standalone-architecture-doc`, `standalone-feature-doc`, `standalone-workflow-doc`, `standalone-specific-workflow-doc`, `standalone-bug-summary` | Create architecture, feature, workflow, or bug-summary docs. |
 
@@ -67,6 +71,10 @@ Use these **instead of** or **in addition to** the main workflow when they fit.
 | **Bugfix (separate)** | | |
 | Small bug | `/rust-bugfix__standalone-fix-small-bug` | describe the bug |
 | Non-trivial bug | wf-1: `/rust-bugfix__wf-1-investigation` → wf-2: `/rust-bugfix__wf-2-proposed-solution` → wf-3: `/rust-bugfix__wf-3-resolution` | investigation → solution → resolution |
+| **Refactor wf (Rust / Python / JS/TS)** | | |
+| Assess / alternatives | `/rust-refactor__wf-1-assess-fit-and-alternatives` (or **`/python-…`**, **`/js-ts-…`**) | subsystem or deps under review |
+| Execute | `…/__wf-2-execute-refactor` | align with Refactor assessment |
+| Verify improvement | `…/__wf-3-verify-improvement` | criteria vs outcome |
 | **Design log (manual)** | | |
 | Create log | `/design-log__create` | slug + topic (when you want a log without running a workflow step) |
 | Record step | `/design-log__record-step` | step type + context |
@@ -76,7 +84,8 @@ Use these **instead of** or **in addition to** the main workflow when they fit.
 | Test gate | `/rust-testing__gate-test` | provide full test breakdown; get tests as specified |
 | **Standalone — other** | | |
 | Decision summary | `/rust-design-review__standalone-decision-summary` | summarize decision for log/ADR |
-| Refactor | `/rust-implementation__standalone-refactor-safe` | refactor scope |
+| Refactor safe (Rust) | `/rust-implementation__standalone-refactor-safe` | refactor scope |
+| Refactor safe (Python/JS/TS) | `/python-implementation__standalone-refactor-safe`, `/js-ts-implementation__standalone-refactor-safe` | refactor scope |
 | Review / scan | `/rust-review__standalone-pr-review`, `standalone-risky-changes-scan` | files or diff |
 | **Documentation** | | |
 | Architecture doc | `/documentation__standalone-architecture-doc` | scope (repo/service) |

@@ -1,0 +1,34 @@
+---
+description: "Refactor workflow: suitability vs alternatives, structured execution, objective improvement review"
+alwaysApply: false
+globs:
+  - "**/*.rs"
+  - "**/Cargo.toml"
+  - "**/.cursor/design-log/*.md"
+---
+
+# Rust refactor workflow
+
+Use this pack when the goal is to **challenge whether the current design or dependency still earns its place**, optionally **replace or reshape** it, and **prove the new shape is better**—not only when behavior-preserving cleanup is enough (for that, prefer `/rust-implementation__standalone-refactor-safe`).
+
+## Quality bar — Step 1 (assessment)
+
+- **Systems lens:** Operational concerns (lifecycle, coupling, observability, security boundary, upgrade path) and team ergonomics—not only “does it compile.”
+- **Rust lens:** Public API surface, error types, async/sync boundaries, unsafe encapsulation, module boundaries, semver impact, testability, and common footguns (panics in library code, leaky abstractions).
+- **Verdict:** State clearly whether the current approach remains justified, should be refactored in place, superseded by another crate or pattern, or removed.
+- **Alternatives:** Name **concrete** options (another crate, std-only split, FFI boundary change, extracting a trait, merging crates), each with adoption cost and risks—not vague “rewrite in X.”
+
+## Quality bar — Step 2 (implementation)
+
+- **Traceability:** Tie changes to the assessment (what hypothesis or decision Step 1 recorded).
+- **Phases:** Prefer small commits/phases that keep tests green; preserve or improve invariants deliberately called out in the log.
+
+## Quality bar — Step 3 (outcome review)
+
+- **Evidence:** Compare **before vs after** on the criteria Step 1 defined (coupling, API clarity, performance if relevant, risk, maintainability)—not vibes.
+- **Honesty:** Explicitly flag regressions or trade-offs retained; residual alternatives if Step 3 shows the winner is still debatable.
+
+## Design log alignment
+
+- Use `./.cursor/design-log/` only; create files via `python .cursor/tools/new_design_log.py --slug <short-name>`.
+- One log per refactor workstream; append **Refactor assessment**, **Refactor implementation**, **Refactor outcome review** across the three workflow steps.

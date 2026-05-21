@@ -13,7 +13,8 @@ When a **workflow command** completes, you **must** record that step in the desi
 **Validator / slim logs:** Append an exact standalone line **`[cursor-hub workflow] step=<step>`** (step matches `validate_workflow_design_log.py --step …`). Legacy-only sections such as **Design discussion** or **Implementation Results** still validate without that line.
 
 **Main workflow commands:** wf-1-design-review, wf-1-implement-module, wf-1-add-tests-only (rust-design-review, rust-implementation, rust-testing).  
-**Bugfix workflow commands (separate flow):** wf-1-investigation, wf-2-proposed-solution, wf-3-resolution (rust-bugfix).
+**Bugfix workflow commands (separate flow):** wf-1-investigation, wf-2-proposed-solution, wf-3-resolution (rust-bugfix).  
+**Refactor workflow (Rust / Python / JS/TS — separate linear flow):** wf-1-assess-fit-and-alternatives, wf-2-execute-refactor, wf-3-verify-improvement (**rust-refactor**, **python-refactor**, **js-ts-refactor**).
 
 **Location:** All design log files live in `./.cursor/design-log/` as `NNN-slug.md`. Create new files only there.
 
@@ -33,6 +34,11 @@ When a **workflow command** completes, you **must** record that step in the desi
 - **Investigation** (after rust-bugfix wf-1): Reproduction steps, evidence, scope, hypotheses. Do not propose the fix yet.
 - **Proposed solution** / **Trade-offs** (after rust-bugfix wf-2): Approach, alternatives considered, trade-offs, verification plan.
 - **Resolution** (after rust-bugfix wf-3): What was done, tests added or run, verification outcome.
+
+**Refactor workflow (**rust-refactor** / **python-refactor** / **js-ts-refactor** packs; linear assessment → refactor → verdict):**
+- **Refactor assessment** (after wf-1): Fit vs alternatives given engineering norms + idioms for that language; usefulness verdict; concrete alternatives; recommendation; verification plan before implementation.
+- **Refactor implementation** (after wf-2): What changed, deviations from assessment, verification outcome (cargo / pytest+linter / npm scripts as applicable).
+- **Refactor outcome review** (after wf-3): Criteria vs evidence, improvement verdict (improved/mixed/not improved), residuals and follow-ups.
 
 Keep each section concise (a few sentences to a short paragraph). Use the same template structure as the main design-log rule (Background, Problem, Design, etc.) when **creating** a new file; when **appending**, add only the relevant section heading and content.
 

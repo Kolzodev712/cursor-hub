@@ -46,6 +46,7 @@ def cmd_install(args: argparse.Namespace) -> int:
         pack_names,
         overwrite=args.overwrite,
         dry_run=args.dry_run,
+        refresh_design_log_readme=args.refresh_design_log_readme,
     )
 
 
@@ -67,6 +68,11 @@ def main() -> int:
         "--overwrite",
         action="store_true",
         help="Overwrite existing rule/command/agent files",
+    )
+    install_parser.add_argument(
+        "--refresh-design-log-readme",
+        action="store_true",
+        help="Overwrite .cursor/design-log/README.md with the hub template; never touches NNN-*.md or other logs.",
     )
     install_parser.add_argument(
         "--target",

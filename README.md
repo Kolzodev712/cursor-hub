@@ -4,7 +4,7 @@ A **public Cursor AI hub**: modular rules, commands, and agents for guiding AI a
 
 ## What's in the repo
 
-- **Packs** under `packs/cursor/`: language-specific packs live in `packs/cursor/rust/`, `packs/cursor/python/`, `packs/cursor/js-ts/`, and `packs/cursor/terraform/` (each with design-review, implementation, testing, bugfix, review), plus shared packs `design-log`, `documentation`, `security`. Each pack has a `pack.yml` and optional `.cursor/rules/`, `.cursor/commands/`, `.cursor/agents/`. The installer creates `.cursor/design-log/` and copies scripts into `.cursor/tools/` in the target project. Install one or more packs into your project.
+- **Packs** under `packs/cursor/`: language-specific packs live in `packs/cursor/rust/`, `packs/cursor/python/`, `packs/cursor/js-ts/`, and `packs/cursor/terraform/` (each with design-review, implementation, testing, bugfix, review), plus shared packs `design-log`, `documentation`, `security`. Each pack has a `pack.yml` and optional `.cursor/rules/`, `.cursor/commands/`, `.cursor/agents/`. **Packs must not ship `.cursor/design-log/` content** — the installer only merges **rules**, **commands**, **agents**, and hub **tools**; it ensures `.cursor/design-log/` exists and adds `README.md` when absent. Numbered logs (`NNN-*.md`) are **never overwritten** (`--overwrite` touches rules/commands/agents only; `--refresh-design-log-readme` is an explicit README-only escape hatch).
 - **CLI and tools:** `cursor-hub` CLI (from `pip install -e .`) or `python tools/install.py` install packs; `tools/` also has validate_packs, new_design_log, and an optional export stub. When you install packs, scripts are copied into the target's `.cursor/tools/`. Use `pip install -e .` for the CLI, or run the script from the hub repo (see `tools/requirements.txt` if needed).
 
 - **Shared foundation** (`_shared`): design-log methodology and when-to-log guidance. It is always installed when you install any other pack.
@@ -35,7 +35,7 @@ python tools/install.py --lang python all ../my-project
 
 You can also run `python -m cursor_hub install all .` from the hub repo without installing the package.
 
-The installer copies packs into the target's `.cursor/` (rules, commands, agents, design-log, tools). Then run `python .cursor/tools/new_design_log.py --slug <name>` from the target project root (use `--kind bugfix` for bugfix logs).
+The installer **merges** rules, commands, and agents into the target `.cursor/` and **merges hub scripts into** `.cursor/tools/`. Design logs (**`NNN-*.md`**) in `.cursor/design-log/` are left alone unless you explicitly pass **`--refresh-design-log-readme`** (README only). Then run `python .cursor/tools/new_design_log.py --slug <name>` from the target project root (use `--kind bugfix` for bugfix logs).
 
 ### Examples (Unix / macOS)
 
@@ -72,9 +72,10 @@ cursor-hub install --lang python all ..
 | **rust-bugfix** / **python-bugfix** / **js-ts-bugfix** / **terraform-bugfix** | Fix small bugs (standalone) or non-trivial bugs (3-step workflow: investigation → proposed solution → resolution). Separate from main design/implement/test flow. |
 | **documentation** | Standalone commands to create architecture docs, feature docs, workflow docs, and bug summaries. |
 | **rust-review** / **python-review** / **js-ts-review** / **terraform-review** | PR review checklist, risky-changes scan (language-appropriate patterns). |
+| **rust-refactor** / **python-refactor** / **js-ts-refactor** | Assess fit vs alternatives → execute refactor → verify improvement (see [CATALOG.md](CATALOG.md)); Terraform has no refactor pack yet. |
 | **security** | Security audit agent and `/security__standalone-audit`: vulnerabilities, deps, secrets, auth, crypto, misconfiguration, CI/CD. |
 
-You can install multiple packs; they merge into a single `.cursor/`. Commands are namespaced by pack (e.g. `/rust-design-review__wf-1-design-review`, `/python-design-review__wf-1-design-review`). Use the **main workflow** (design, implement, test) in any order or on their own — each pack numbers its own steps (e.g. wf-1). **Standalone** commands: gates, refactor, PR review, etc. See [CATALOG.md](CATALOG.md) for the full list.
+You can install multiple packs; they merge into a single `.cursor/`. Commands are namespaced by pack (e.g. `/rust-design-review__wf-1-design-review`, `/python-design-review__wf-1-design-review`). Use the **main workflow** (design, implement, test) in any order or on their own — each pack numbers its own steps (e.g. wf-1). **Other flows:** bugfix (wf-1–3), refactor (wf-1–3 for **rust-** / **python-** / **js-ts-**). **Standalone** commands: gates, small safe refactor, PR review, etc. See [CATALOG.md](CATALOG.md) for the full list.
 
 ## Design log (deterministic numbering)
 
@@ -86,7 +87,7 @@ To create the next design log file **without guessing the number**:
 - **From the hub repo** (e.g. hub as submodule, creating a log in a project):  
   `python tools/new_design_log.py --slug short-name --dir /path/to/your/project/.cursor/design-log`
 
-**Workflow validator (workflow commands only):** After a workflow command, run `python .cursor/tools/validate_workflow_design_log.py --step <step>`. Slim logs must include an exact line **`[cursor-hub workflow] step=<same-as---step>`** when the step is recorded; older logs using legacy headings only still pass without it. Steps: `design-review`, `implement`, `add-tests`, `investigation`, `proposed-solution`, `resolution`. Standalone commands do not run this validator.
+**Workflow validator (workflow commands only):** After a workflow command, run `python .cursor/tools/validate_workflow_design_log.py --step <step>`. Slim logs must include an exact line **`[cursor-hub workflow] step=<same-as---step>`** when the step is recorded; older logs using legacy headings only still pass without it. Steps: `design-review`, `implement`, `add-tests`, `investigation`, `proposed-solution`, `resolution`, `refactor-assessment`, `refactor-implement`, `refactor-outcome-review`. Standalone commands do not run this validator.
 
 ## Validation
 
@@ -105,15 +106,16 @@ Checks that every pack has `pack.yml`, rules have valid frontmatter, commands fo
 ## Languages
 
 - Language profiles are built into the installer (CLI and `tools/install.py`) via the `--lang` flag.
-- **`--lang rust`** installs: design-log, documentation, security, and all Rust packs (rust-design-review, rust-implementation, rust-testing, rust-bugfix, rust-review).
-- **`--lang python`** installs: design-log, documentation, security, and all Python packs (python-design-review, python-implementation, python-testing, python-bugfix, python-review).
-- **`--lang js-ts`** installs: design-log, documentation, security, and all JS/TS packs (js-ts-design-review, js-ts-implementation, js-ts-testing, js-ts-bugfix, js-ts-review).
+- **`--lang rust`** installs: design-log, documentation, security, and all Rust packs (rust-design-review, rust-implementation, rust-testing, rust-bugfix, rust-review, rust-refactor). **`rust-best-practices-skill.mdc`** requires reading **`.cursor/skills/rust-best-practices/SKILL.md`** when Rust files or `Cargo.toml`/`build.rs` drive the chat and that skill folder exists—copy [skills/rust-best-practices/](skills/rust-best-practices/) into `.cursor/skills/` (see [skills/README.md](skills/README.md)).
+- **`--lang python`** installs: design-log, documentation, security, and all Python packs (python-design-review, python-implementation, python-testing, python-bugfix, python-review, python-refactor).
+- **`--lang js-ts`** installs: design-log, documentation, security, and all JS/TS packs (js-ts-design-review, js-ts-implementation, js-ts-testing, js-ts-bugfix, js-ts-review, js-ts-refactor).
 - **`--lang terraform`** installs: design-log, documentation, security, and all Terraform packs (terraform-design-review, terraform-implementation, terraform-testing, terraform-bugfix, terraform-review).
 
 Use `cursor-hub install --lang <language> all <target_dir>` (or `python tools/install.py ...` from the hub repo) to install the full set for a language.
 ## Meta / authoring
 
 - **[AGENTS.md](AGENTS.md)** — Contract for contributors and agents working on the hub: purpose, where packs/commands/rules live, present drafts for approval.
+- **Skills (Cursor):** Maintainer Rust skill lives under [skills/rust-best-practices/](skills/rust-best-practices/). Copy or symlink into a target project’s `.cursor/skills/` — not merged by the pack installer yet (see [skills/README.md](skills/README.md)).
 - **Generate-* skills:** The hub can support authoring via Cursor skills (e.g. generate-rules, generate-commands) that follow the same workflow: gather requirements → draft → present → write after approval. Skills may live in the hub repo (for maintainers) or in an optional meta pack that installs into a project’s `.cursor/skills/`. If adopted, ensure skills use the hub’s paths and naming (`.cursor/design-log/`, pack names). See [AGENTS.md](AGENTS.md) and the present-before-writing rule in `_shared`.
 
 ## License

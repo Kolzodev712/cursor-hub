@@ -1,0 +1,32 @@
+---
+description: "Refactor workflow: suitability vs alternatives, structured execution, objective improvement review (JS/TS)"
+alwaysApply: false
+globs:
+  - "**/*.ts"
+  - "**/*.tsx"
+  - "**/*.js"
+  - "**/*.jsx"
+  - "**/*.mjs"
+  - "**/*.cjs"
+  - "**/package.json"
+  - "**/tsconfig*.json"
+  - "**/.cursor/design-log/*.md"
+---
+
+# JavaScript / TypeScript refactor workflow
+
+Use this pack when you need to **challenge whether the current module boundary, pattern, runtime choice, or dependency still earns its place**, optionally **replace or reshape** it, and **prove improvement**—not only behavior-preserving cleanup (for that, prefer `/js-ts-implementation__standalone-refactor-safe`).
+
+## Quality bar — Step 1 (assessment)
+
+- **Systems lens:** Browser vs Node/runtime targets, SSR/hydration, bundle size budgets, CSP/security boundaries for client code, versioning and migration for published packages, tooling/CI ergonomics—not only typecheck-green.
+- **JS/TS idioms:** Modules vs barrels, typed boundaries, async error handling (`Result`/`try` consistency), lint rules and strictness tiers, duplication, framework‑owned vs plain TS seams, semver for libs, transitive dependency churn.
+
+## Quality bar — Steps 2–3
+
+Same as other refactor packs: **traceable phases**, then **criteria-based** verdict with honest regressions.
+
+## Design log alignment
+
+- `./.cursor/design-log/` only; create via `python .cursor/tools/new_design_log.py --slug <short-name>`.
+- Append **Refactor assessment**, **Refactor implementation**, **Refactor outcome review** across wf-1–wf-3.

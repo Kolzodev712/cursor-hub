@@ -11,6 +11,9 @@ Usage:
 Alternatively use the CLI (from repo root or after pip install -e .):
   cursor-hub install --lang rust all .
   python -m cursor_hub install all ../my-project
+
+Flags: --overwrite replaces existing rules/commands/agents only. --refresh-design-log-readme
+overwrites .cursor/design-log/README.md; numbered logs (NNN-*.md) are never touched by install.
 """
 from __future__ import annotations
 
@@ -40,6 +43,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Install Cursor packs into a target project.")
     parser.add_argument("--dry-run", action="store_true", help="Print what would be done without writing")
     parser.add_argument("--overwrite", action="store_true", help="Overwrite existing rule/command/agent files")
+    parser.add_argument(
+        "--refresh-design-log-readme",
+        action="store_true",
+        help="Overwrite .cursor/design-log/README.md with the hub template; never touches numbered logs (NNN-*.md).",
+    )
     parser.add_argument("--target", "-t", metavar="DIR", help="Target project directory (else last arg is target)")
     parser.add_argument(
         "--lang",
@@ -86,6 +94,7 @@ def main() -> int:
         pack_names,
         overwrite=args.overwrite,
         dry_run=args.dry_run,
+        refresh_design_log_readme=args.refresh_design_log_readme,
     )
 
 

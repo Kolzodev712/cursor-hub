@@ -8,7 +8,7 @@ This file is the single contract for contributors and agents working on the **cu
 
 
 - **Design-log and workflow are non-negotiable.** The hub ships a design-log methodology (logs in `.cursor/design-log/`, creation via `new_design_log.py`), workflow commands (design review → implement → test, plus bugfix flow), and standalone commands. Packs live under `packs/cursor/`; each has `pack.yml` and optionally `.cursor/rules/`, `.cursor/commands/`, `.cursor/agents/`.
-- **Where things live:** Rules in `.cursor/rules/*.mdc`, commands in `.cursor/commands/*.md`, agents in `.cursor/agents/*.md`. Command filenames use `{pack-name}__{command-name}.md`. The installer copies into a target project’s `.cursor/`; see [CATALOG.md](CATALOG.md) and [README.md](README.md).
+- **Where things live:** Rules in `.cursor/rules/*.mdc`, commands in `.cursor/commands/*.md`, agents in `.cursor/agents/*.md`. Command filenames use `{pack-name}__{command-name}.md`. The installer copies into a target project’s `.cursor/` (rules/commands/agents + hub tools); it **never** overwrites numbered design logs **`NNN-*.md`** in `.cursor/design-log/` (README-only bootstrap / optional `--refresh-design-log-readme`). Packs **must not ship** `.cursor/design-log/` content — see validator. **Cursor Skills** maintained in this repo live under **`skills/<skill-name>/`** (example: `skills/rust-best-practices/`); copy/symlink into `.cursor/skills/` in a target — not installed by pack merge. See [skills/README.md](skills/README.md). See also [CATALOG.md](CATALOG.md) and [README.md](README.md).
 
 ## When adding or changing hub content
 

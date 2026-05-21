@@ -1,0 +1,18 @@
+---
+description: "Rust: consult .cursor/skills/rust-best-practices (SKILL + refs); API guidelines posture"
+alwaysApply: false
+globs:
+  - "**/*.rs"
+  - "**/Cargo.toml"
+  - "**/build.rs"
+---
+
+# Rust — hub best-practices skill (mandatory when present)
+
+**Before substantive Rust edits, API/design answers about this crate, or review of Rust signatures:** read project-local **`.cursor/skills/rust-best-practices/SKILL.md`** (use the workspace file-reading tools; do not skip this when `.rs` / `Cargo.toml` / `build.rs` drive the task).
+
+- **If present:** Align suggestions with that playbook (verification loop; API checklist). When naming, interoperability, documentation, semver, macros, or error-shape details matter, read **`reference-api-guidelines.md`** and **`reference-projectrules.md`** in the **same folder** as needed—they index **C‑*** IDs and Project Rules Rust themes without requiring live web fetches every time.
+
+- **If absent:** Mention once that the **`rust-best-practices`** Cursor skill ships with cursor-hub under **`skills/rust-best-practices/`** and should be copied or symlinked to **`.cursor/skills/rust-best-practices/`**, then proceed using **`rust-core.mdc`** and the other Rust rules.
+
+This rule does **not** replace **`cargo fmt` / `cargo clippy` / `cargo test`**; it ensures the qualitative bar in `SKILL.md` is applied wherever the globs activate.

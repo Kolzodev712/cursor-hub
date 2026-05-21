@@ -2,7 +2,7 @@
 """
 Validate pack structure under packs/ (or given path).
 Checks: pack.yml present, rules .mdc with frontmatter description, commands .md non-empty,
-agents dir and files exist, no duplicate command names per pack.
+agents dir and files exist, no duplicate command names per pack, packs must not ship .cursor/design-log/.
 Exit non-zero on any failure.
 """
 from __future__ import annotations
@@ -62,6 +62,19 @@ def validate_pack(pack_path: str, pack_name: str) -> list[str]:
         if pack_name != "_shared":
             errors.append(f"{pack_name}: missing .cursor/")
         return errors
+
+    # Never ship .cursor/design-log/ inside a pack: avoids ever syncing templates into targets as log files.
+    shipped_log = os.path.join(cursor_dir, "design-log")
+    if os.path.isdir(shipped_log):
+        try:
+            entries = sorted(os.listdir(shipped_log))
+        except OSError:
+            entries = ["?"]
+        if entries:
+            errors.append(
+                f"{pack_name}: must not ship {CURSOR_DIR}/design-log/ with content "
+                f"(installer never merges packs into project logs; remove {entries})."
+            )
 
     # rules
     rules_dir = os.path.join(cursor_dir, RULES)

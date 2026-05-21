@@ -13,7 +13,8 @@ Usage:
   python .cursor/tools/validate_workflow_design_log.py [--step STEP] [--dir DESIGN_LOG_DIR]
   From project root after running a workflow command.
 
-Steps: design-review | implement | add-tests | investigation | proposed-solution | resolution
+Steps: design-review | implement | add-tests | investigation | proposed-solution | resolution |
+  refactor-assessment | refactor-implement | refactor-outcome-review
 Exit: 0 if validation passes; 1 otherwise.
 """
 from __future__ import annotations
@@ -33,6 +34,9 @@ STEP_LEGACY_MARKERS: dict[str, list[list[str]]] = {
     "investigation": [["Investigation"]],
     "proposed-solution": [["Proposed solution", "Trade-offs"]],
     "resolution": [["Resolution"]],
+    "refactor-assessment": [["Refactor assessment"]],
+    "refactor-implement": [["Refactor implementation"]],
+    "refactor-outcome-review": [["Refactor outcome review"]],
 }
 
 ALL_SECTION_MARKERS = [
@@ -54,6 +58,9 @@ ALL_SECTION_MARKERS = [
     "Verification",
     "Implementation Results",
     "Test session",
+    "Refactor assessment",
+    "Refactor implementation",
+    "Refactor outcome review",
 ]
 
 # Consider "recent" if modified within this many seconds (when --step not given)

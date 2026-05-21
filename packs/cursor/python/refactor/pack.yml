@@ -1,0 +1,3 @@
+name: python-refactor
+description: Refactor workflow — assess fit vs alternatives (engineering + idiomatic Python), execute refactor, verify the outcome is an improvement.
+version: "0.3.0"

@@ -18,6 +18,11 @@ TOOLS_DIR = "tools"
 DESIGN_LOG_DIR = "design-log"
 SHARED_PACK = "_shared"
 
+# Only these subdirectories under a pack's `.cursor/` are merged into the target.
+# `.cursor/design-log/` is NEVER merged from packs — project logs (`NNN-*.md`) must survive reinstalls.
+# The installer only bootstraps an empty-ish directory + README.md (see ensure_design_log_dir).
+CURSOR_SUBDIRS_MERGED_FROM_PACKS = (RULES, COMMANDS, AGENTS)
+
 ALL_RUST_PACKS = [
     "design-log",
     "rust-design-review",
@@ -25,6 +30,7 @@ ALL_RUST_PACKS = [
     "rust-testing",
     "rust-bugfix",
     "rust-review",
+    "rust-refactor",
     "documentation",
     "security",
 ]
@@ -35,6 +41,7 @@ ALL_PYTHON_PACKS = [
     "python-testing",
     "python-bugfix",
     "python-review",
+    "python-refactor",
     "documentation",
     "security",
 ]
@@ -45,6 +52,7 @@ ALL_JS_TS_PACKS = [
     "js-ts-testing",
     "js-ts-bugfix",
     "js-ts-review",
+    "js-ts-refactor",
     "documentation",
     "security",
 ]
@@ -147,12 +155,15 @@ def get_pack_dirs(repo_root: str, pack_names: list[str]) -> list[str]:
 
 
 def merge_cursor_dir(src: str, dst: str, overwrite: bool, dry_run: bool) -> tuple[int, int, int]:
-    """Copy contents of src/.cursor/* into dst/.cursor/*."""
+    """Copy rules, commands, and agents from src/.cursor/{rules,commands,agents} into dst.
+
+    Never reads or writes dst .cursor/design-log/ — project design logs stay untouched.
+    """
     src_cursor = os.path.join(src, CURSOR_DIR)
     r, c, a = 0, 0, 0
     if not os.path.isdir(src_cursor):
         return (r, c, a)
-    for sub in (RULES, COMMANDS, AGENTS):
+    for sub in CURSOR_SUBDIRS_MERGED_FROM_PACKS:
         src_sub = os.path.join(src_cursor, sub)
         if not os.path.isdir(src_sub):
             continue
@@ -218,14 +229,21 @@ def copy_tools(repo_root: str, target: str, dry_run: bool) -> None:
     print(f"  Merged tools into {CURSOR_DIR}/{TOOLS_DIR}/ (run from project root: python {CURSOR_DIR}/{TOOLS_DIR}/new_design_log.py --slug <name>).")
 
 
-def ensure_design_log_dir(target: str, dry_run: bool) -> None:
-    """Create target/.cursor/design-log/ and README.md if missing."""
+def ensure_design_log_dir(target: str, dry_run: bool, *, refresh_readme: bool = False) -> None:
+    """Bootstrap target/.cursor/design-log/ without touching numbered logs or other *.md entries.
+
+    - Creates the directory when missing.
+    - Writes README.md only if it is absent, unless refresh_readme=True (explicit opt-in overwrite).
+    - Never deletes, renames, or overwrites ``NNN-*.md`` (or any non-README file) — those are owned by the project.
+    """
     log_dir = os.path.join(target, CURSOR_DIR, DESIGN_LOG_DIR)
     readme = os.path.join(log_dir, "README.md")
-    if os.path.isfile(readme):
+    need_readme = refresh_readme or not os.path.isfile(readme)
+    if not need_readme:
         return
     if dry_run:
-        print(f"[dry-run] would create {CURSOR_DIR}/{DESIGN_LOG_DIR}/README.md")
+        action = "refresh" if refresh_readme and os.path.isfile(readme) else "create"
+        print(f"[dry-run] would {action} {CURSOR_DIR}/{DESIGN_LOG_DIR}/README.md (numbered logs unaffected)")
         return
     os.makedirs(log_dir, exist_ok=True)
     with open(readme, "w", encoding="utf-8") as f:
@@ -239,10 +257,14 @@ def run_install(
     *,
     overwrite: bool = False,
     dry_run: bool = False,
+    refresh_design_log_readme: bool = False,
 ) -> int:
     """
     Install the given packs from repo_root into target.
     Returns 0 on success, 1 on error.
+
+    Rules/commands/agents merge from packs; ``--overwrite`` affects only those files.
+    Project design logs live under `.cursor/design-log/` and are never deleted or synced from hub packs.
     """
     repo_root = os.path.normpath(os.path.abspath(repo_root))
     target = os.path.normpath(os.path.abspath(target))
@@ -272,7 +294,7 @@ def run_install(
         total_c += c
         total_a += a
 
-    ensure_design_log_dir(target, dry_run)
+    ensure_design_log_dir(target, dry_run, refresh_readme=refresh_design_log_readme)
     copy_tools(repo_root, target, dry_run)
 
     if dry_run:
@@ -292,7 +314,11 @@ def run_install(
             print(f"  Added: {total_r} rules, {total_c} commands, {total_a} agents")
         else:
             print("  (No new files; target already had these. Use --overwrite to replace.)")
-        print(f"  {CURSOR_DIR}/{DESIGN_LOG_DIR}/ created if missing.")
+        readme_note = " (README refreshed from hub)" if refresh_design_log_readme else ""
+        print(
+            f"  {CURSOR_DIR}/{DESIGN_LOG_DIR}/: README created if absent{readme_note}; "
+            "numbered logs (NNN-*.md) and other markdown never modified by installer."
+        )
         cursor_dir = os.path.join(target, CURSOR_DIR)
         if os.path.isdir(cursor_dir):
             for sub in (RULES, COMMANDS, AGENTS, DESIGN_LOG_DIR, TOOLS_DIR):

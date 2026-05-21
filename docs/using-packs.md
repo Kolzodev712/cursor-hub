@@ -1,8 +1,10 @@
 # Using the packs day to day
 
-After you run `cursor-hub install all ../my-project` or `cursor-hub install --lang python all .` (or `python tools/install.py ...` from the hub repo), your project has `.cursor/rules/`, `.cursor/commands/`, `.cursor/agents/`, `.cursor/design-log/`, and `.cursor/tools/`. Commands are used in one of two ways: **main workflow** (design, implement, test — use in any order or on their own; each pack has its own step numbers) or **standalone** (for a specific need).
+After you run `cursor-hub install all ../my-project` or `cursor-hub install --lang python all .` (or `python tools/install.py ...` from the hub repo), your project has `.cursor/rules/`, `.cursor/commands/`, `.cursor/agents/`, `.cursor/design-log/`, and `.cursor/tools/`. **Re-running install updates rules/commands/agents plus hub tooling only — numbered logs (`NNN-*.md`) are never overwritten.** (`--overwrite` affects overlapping hub-managed files there; `--refresh-design-log-readme` updates `README.md` only.) Commands are used in one of several ways: **main workflow** (design, implement, test — use in any order or on their own), **structured flows** such as bugfix or **refactor** (Rust / Python / JS/TS), or **standalone** commands for a targeted task.
 
 The same workflow structure is available for **Rust**, **Python**, **JS/TS**, and **Terraform**. Substitute the pack prefix: `rust-`, `python-`, `js-ts-`, or `terraform-` (e.g. `/python-design-review__wf-1-design-review`). See [CATALOG.md](../CATALOG.md) for the full list and language-pack table.
+
+**Rust installs:** **`rust-best-practices-skill.mdc`** (file-scoped to `*.rs` / `Cargo.toml` / `build.rs`) tells the agent to read **`.cursor/skills/rust-best-practices/SKILL.md`** before substantive Rust edits when that folder exists. Copy or symlink the hub’s **[`skills/rust-best-practices/`](../skills/rust-best-practices/)** tree into your project’s **`.cursor/skills/`** (see [skills/README.md](../skills/README.md)); the pack installer does not copy skills automatically.
 
 ---
 
@@ -18,7 +20,7 @@ So you don't "manage" rules and agents by hand. You **choose the right command**
 
 ---
 
-## Two ways to use commands
+## Main workflow vs other commands
 
 ### 1. Main workflow (use in any order or on their own)
 
@@ -33,6 +35,8 @@ Each pack has its own step numbering. Use design review, implement, and/or add t
 **Manual design log:** To create a new log without running a workflow step, use `/design-log__create`. To record a step manually, use `/design-log__record-step`.
 
 The design log is the spine: each workflow command records into it automatically. You can run design, implement, or test on their own — no need to run all of them.
+
+**Separate linear workflows:** Non-trivial **bugs** → `/<lang>-bugfix__wf-1-investigation` … wf-3. **Refactor** (**rust-** / **python-** / **js-ts-**) → `/<stack>-refactor__wf-1-assess-fit-and-alternatives` … wf-3 (see [CATALOG.md](../CATALOG.md)).
 
 ### 2. Standalone commands (specific needs)
 
@@ -61,7 +65,7 @@ Use when you have a **particular problem**, not the full design → implement �
 | Specific workflow doc (in-depth) | `/documentation__standalone-specific-workflow-doc` |
 | Bug summary | `/documentation__standalone-bug-summary` |
 
-So: **main workflow** = use design review, implement, and/or add tests in any order (each pack's step 1); **standalone** = pick the command that matches your immediate need (gates, refactor, review, etc.).
+So: **main workflow** = design review, implement, and/or add tests in any order; **standalone** = gates, safe refactor-only, review, docs, etc. **Bugfix** and **\*-refactor** (Rust / Python / JS/TS) are their own numbered flows (see [CATALOG.md](../CATALOG.md)).
 
 ---
 
@@ -73,6 +77,7 @@ Use `<lang>-` where `<lang>` is `rust`, `python`, `js-ts`, or `terraform` (depen
 |--------------|------------------|
 | **Main flow** | Design: `/<lang>-design-review__wf-1-design-review` → Implement: `/<lang>-implementation__wf-1-implement-module` → Test: `/<lang>-testing__wf-1-add-tests-only`. Use in any order or on their own. Design log updated automatically after each. Manual log: `/design-log__create`. |
 | **Bugfix (separate)** | Small bug: `/<lang>-bugfix__standalone-fix-small-bug`. Non-trivial: wf-1-investigation → wf-2-proposed-solution → wf-3-resolution (`/<lang>-bugfix__wf-1-investigation`, etc.). |
+| **Refactor (Rust / Python / JS/TS installs)** | Assess → execute → verify: `/rust-refactor__wf-1-assess-fit-and-alternatives` … wf-3, or **`/python-refactor__…`**, **`/js-ts-refactor__…`** (same step names). |
 | **Standalone — gate** | `/<lang>-design-review__gate-design`, `/<lang>-implementation__gate-impl`, `/<lang>-testing__gate-test` |
 | **Standalone — other** | `/<lang>-design-review__standalone-decision-summary`, `/<lang>-implementation__standalone-refactor-safe`, `/<lang>-review__standalone-pr-review`, `/<lang>-review__standalone-risky-changes-scan`, `/documentation__standalone-*` (architecture, feature, workflow, specific workflow, bug summary) |
 
@@ -91,7 +96,7 @@ You don't turn these on/off per task. They're part of the environment. Use the *
 
 ## Agents = "who" for that command
 
-- **Structured:** wf-1-design-review → **design critic**; wf-1-implement-module → **\<lang>-implementer** (e.g. rust-implementer, python-implementer); wf-1-add-tests-only → **test author**. Design log recording is automatic (design-log pack). **Bugfix (separate flow):** standalone-fix-small-bug or wf-1/wf-2/wf-3 → **\<lang>-bugfix**.
+- **Structured:** wf-1-design-review → **design critic**; wf-1-implement-module → **\<lang>-implementer** (e.g. rust-implementer, python-implementer); wf-1-add-tests-only → **test author**. Design log recording is automatic (design-log pack). **Bugfix (separate flow):** standalone-fix-small-bug or wf-1/wf-2/wf-3 → **\<lang>-bugfix**. **Refactor** (**rust-refactor** / **python-refactor** / **js-ts-refactor** packs): wf-1 → refactor suitability analyst; wf-2 → refactor engineer; wf-3 → refactor outcome verifier.
 - **Standalone gates:** gate-design, gate-impl, gate-test → same agents with strict refusal until you provide inputs.
 - **Standalone other:** standalone-refactor-safe → \<lang>-implementer; standalone-pr-review, standalone-risky-changes-scan → **reviewer**; standalone-decision-summary → design critic; documentation commands → **documentation**.
 

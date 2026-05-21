@@ -1,0 +1,32 @@
+---
+description: "Refactor workflow: suitability vs alternatives, structured execution, objective improvement review (Python)"
+alwaysApply: false
+globs:
+  - "**/*.py"
+  - "**/pyproject.toml"
+  - "**/requirements*.txt"
+  - "**/.cursor/design-log/*.md"
+---
+
+# Python refactor workflow
+
+Use this pack when the goal is to **challenge whether the current package layout, subsystem, or dependency still earns its place**, optionally **replace or reshape** it, and **prove the new shape is better**—not only when behavior-preserving cleanup is enough (for that, prefer `/python-implementation__standalone-refactor-safe`).
+
+## Quality bar — Step 1 (assessment)
+
+- **Systems lens:** Lifecycle, coupling, observability (logging/tracing hooks), deployment/runtime constraints (sync workers vs async apps), secrets/config handling, migration path—not only “imports work.”
+- **Python idioms:** Public API clarity, typing story, packaging vs script layout, asyncio vs threaded boundaries, duplication, frameworks vs stdlib seams, semver for libraries, dependency weight (transitive churn), sharp edges (bare `except`, mutable defaults, eager imports).
+
+## Quality bar — Step 2 (implementation)
+
+- **Traceability:** Tie changes to the assessment (what hypothesis Step 1 recorded).
+- **Phases:** Prefer small phases that keep formatters, linters, type-checkers, and tests green when applicable.
+
+## Quality bar — Step 3 (outcome review)
+
+- **Evidence:** Compare **before vs after** on the criteria Step 1 defined—not vibes.
+
+## Design log alignment
+
+- Use `./.cursor/design-log/` only; create files via `python .cursor/tools/new_design_log.py --slug <short-name>`.
+- Append **Refactor assessment**, **Refactor implementation**, **Refactor outcome review** across wf-1–wf-3.

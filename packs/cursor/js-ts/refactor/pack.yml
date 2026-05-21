@@ -1,0 +1,3 @@
+name: js-ts-refactor
+description: Refactor workflow — assess fit vs alternatives (engineering + idiomatic JS/TS), execute refactor, verify the outcome is an improvement.
+version: "0.3.0"
