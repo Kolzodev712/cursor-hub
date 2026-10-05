@@ -124,13 +124,18 @@ globs:
 - **Docs:** Public items must have doc comments; include examples for non-obvious APIs.
 ```
 
-## Engineering-doctrine references
+## Engineering-doctrine knowledge layers
 
-When editing `skills/engineering-doctrine/reference/*.md`:
+When editing `skills/engineering-doctrine/`:
 
-- Every reference file needs **`## Epistemic status`** and **`## Sources`** (source IDs from [SOURCES.md](../skills/engineering-doctrine/SOURCES.md)).
-- Classify claims: **SPEC**, **IMPLEMENTATION**, **EMPIRICAL**, **HEURISTIC**, **POLICY** — do not state EMPIRICAL truths as SPEC.
-- Register new sources in `SOURCES.md` with Authority tier, Verified date, URL, and **Does not establish**.
-- Do not copy vendor manuals into the repo; distill decision rules.
-- Run `python3 tools/validate_doctrine_sources.py` (structural check only; human verification remains required).
+- **`decision/`** — problem dimensions and questions; ends with “Possible next investigations”, not technique tutorials.
+- **`techniques/`** — optional mechanisms; require **`## Parent decision domain`**; load only when routed.
+- **`platforms/`** — scoped IMPLEMENTATION facts; do not fold into generic decision files.
+- Do **not** add techniques to core policy or bulk-load technique catalogs in the router.
+- Do **not** add platform-specific facts to generic decision doctrine.
+- Do **not** promote project findings into the hub without source audit and reuse justification.
+- Before a **new decision domain**, show existing domains cannot express the recurring decision.
+- Before new **technique/platform** files, define the routing trigger that loads them.
+- Every decision/technique doc (except README): **`## Epistemic status`** + **`## Sources`** ([SOURCES.md](../skills/engineering-doctrine/SOURCES.md)).
+- Run `python3 tools/validate_doctrine_sources.py`.
 

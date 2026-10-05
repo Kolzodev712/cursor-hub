@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Engineering-doctrine knowledge layers** — `decision/`, `techniques/`, `platforms/`; SIMD split (cpu-execution + techniques/simd); knowledge-gap policy; removed flat `reference/` tree.
 - **Engineering-doctrine source audit** — Epistemic classes (SPEC/IMPLEMENTATION/EMPIRICAL/HEURISTIC/POLICY), [skills/engineering-doctrine/SOURCES.md](skills/engineering-doctrine/SOURCES.md), rewritten references, [docs/doctrine-source-audit.md](docs/doctrine-source-audit.md), `tools/validate_doctrine_sources.py`.
 - **Doctrine gate hardening** — invalid `components.json` fail-closed for substantive writes; read state stores **SHA-256** fingerprints (stale context requires reread); session keys use **conversation_id** or **ephemeral pid+root** (no shared `default` bucket).
 - **Ambient engineering architecture** — **`engineering-doctrine`** pack (policy rule, `.cursor/doctrine/` bootstrap, hooks, skill install); **`skills/engineering-doctrine/`** decision router with reference topics; installer support for **`skills:`** in `pack.yml`, **`hooks_merge`**, idempotent **`hooks.json`** merge, and doctrine protection on reinstall. Docs: [docs/engineering-doctrine.md](docs/engineering-doctrine.md). Tests: `tests/test_installer_doctrine.py`.

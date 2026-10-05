@@ -3,10 +3,10 @@
 Structural validation for engineering-doctrine sources (no network, no claim proving).
 
 Checks:
-- skills/engineering-doctrine/SOURCES.md exists with required registry IDs
-- Each reference/*.md has Epistemic status and Sources sections
-- Source IDs cited in reference Sources sections exist in SOURCES.md
-- Each SOURCES.md entry has Authority, Verified, URL (or in-repo policy marker)
+- skills/engineering-doctrine/SOURCES.md registry
+- decision/*.md and techniques/*.md (except README) have Epistemic status + Sources
+- technique docs declare Parent decision domain
+- Source IDs in Sources sections exist in SOURCES.md
 """
 from __future__ import annotations
 
@@ -17,8 +17,6 @@ import sys
 
 _REPO_ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), ".."))
 SKILL_ROOT = os.path.join(_REPO_ROOT, "skills", "engineering-doctrine")
-SOURCES_FILE = os.path.join(SKILL_ROOT, "SOURCES.md")
-REFERENCE_DIR = os.path.join(SKILL_ROOT, "reference")
 
 REQUIRED_SOURCE_IDS = [
     "RUST-REF-MEMORY-MODEL",
@@ -47,7 +45,20 @@ SECTION_EPISTEMIC = re.compile(r"^## Epistemic status\s*$", re.MULTILINE)
 SECTION_SOURCES = re.compile(r"^## Sources\s*$", re.MULTILINE)
 SOURCE_ID_HEAD = re.compile(r"^## ([A-Z0-9-]+)\s*$", re.MULTILINE)
 SOURCE_ID_LINE = re.compile(r"^-\s+([A-Z0-9-]+)\s*$", re.MULTILINE)
-SOURCE_ID_INLINE = re.compile(r"\b([A-Z]{2,}(?:-[A-Z0-9]+)+)\b")
+PARENT_DOMAIN = re.compile(r"^## Parent decision domain\s*\n\s*([a-z0-9-]+)\s*$", re.MULTILINE)
+
+DECISION_DOMAINS = {
+    "algorithm-selection",
+    "data-layout",
+    "memory",
+    "allocation",
+    "concurrency",
+    "atomics",
+    "cpu-execution",
+    "io",
+    "benchmarking",
+    "evidence",
+}
 
 
 def read_text(path: str) -> str:
@@ -56,10 +67,8 @@ def read_text(path: str) -> str:
 
 
 def parse_registry_ids(text: str) -> dict[str, str]:
-    """Map source ID -> section body (rough)."""
     ids: dict[str, str] = {}
     parts = SOURCE_ID_HEAD.split(text)
-    # parts[0] is preamble; then alternating id, body
     i = 1
     while i + 1 < len(parts):
         sid = parts[i].strip()
@@ -97,23 +106,43 @@ def extract_sources_section(text: str) -> str:
     return text[m.end() :]
 
 
-def validate_reference(path: str, registry_ids: set[str]) -> list[str]:
+def validate_doctrine_doc(path: str, registry_ids: set[str], *, require_parent: bool) -> list[str]:
     errors: list[str] = []
-    name = os.path.basename(path)
+    name = os.path.relpath(path, SKILL_ROOT)
     text = read_text(path)
     if not SECTION_EPISTEMIC.search(text):
         errors.append(f"{name}: missing '## Epistemic status' section")
     src_block = extract_sources_section(text)
     if not src_block.strip():
         errors.append(f"{name}: missing '## Sources' section")
-        return errors
-    cited = set(SOURCE_ID_LINE.findall(src_block))
-    if not cited:
-        errors.append(f"{name}: Sources section has no '- ID' entries")
-    for cid in cited:
-        if cid not in registry_ids:
-            errors.append(f"{name}: unknown source ID '{cid}' (not in SOURCES.md)")
+    else:
+        cited = set(SOURCE_ID_LINE.findall(src_block))
+        if not cited:
+            errors.append(f"{name}: Sources section has no '- ID' entries")
+        for cid in cited:
+            if cid not in registry_ids:
+                errors.append(f"{name}: unknown source ID '{cid}'")
+    if require_parent:
+        m = PARENT_DOMAIN.search(text)
+        if not m:
+            errors.append(f"{name}: missing '## Parent decision domain'")
+        elif m.group(1) not in DECISION_DOMAINS:
+            errors.append(f"{name}: parent domain '{m.group(1)}' not a known decision domain")
     return errors
+
+
+def iter_docs(root: str, sub: str, *, skip_readme: bool) -> list[str]:
+    base = os.path.join(root, sub)
+    out: list[str] = []
+    if not os.path.isdir(base):
+        return out
+    for fname in sorted(os.listdir(base)):
+        if not fname.endswith(".md"):
+            continue
+        if skip_readme and fname == "README.md":
+            continue
+        out.append(os.path.join(base, fname))
+    return out
 
 
 def main() -> int:
@@ -121,20 +150,32 @@ def main() -> int:
     parser.add_argument("--skill-root", default=SKILL_ROOT)
     args = parser.parse_args()
     sources_path = os.path.join(args.skill_root, "SOURCES.md")
-    ref_dir = os.path.join(args.skill_root, "reference")
 
     errors = validate_registry(sources_path)
     registry_ids = set(parse_registry_ids(read_text(sources_path)).keys()) if os.path.isfile(sources_path) else set()
 
-    if os.path.isdir(ref_dir):
-        for fname in sorted(os.listdir(ref_dir)):
-            if not fname.endswith(".md"):
-                continue
-            errors.extend(validate_reference(os.path.join(ref_dir, fname), registry_ids))
+    legacy_ref = os.path.join(args.skill_root, "reference")
+    if os.path.isdir(legacy_ref):
+        errors.append("Legacy skills/engineering-doctrine/reference/ must be removed (use decision/)")
+
+    for path in iter_docs(args.skill_root, "decision", skip_readme=False):
+        errors.extend(validate_doctrine_doc(path, registry_ids, require_parent=False))
+
+    for path in iter_docs(args.skill_root, "techniques", skip_readme=True):
+        errors.extend(validate_doctrine_doc(path, registry_ids, require_parent=True))
+
+    for readme in ("techniques/README.md", "platforms/README.md"):
+        rp = os.path.join(args.skill_root, readme)
+        if not os.path.isfile(rp):
+            errors.append(f"Missing {readme}")
 
     skill_md = os.path.join(args.skill_root, "SKILL.md")
-    if os.path.isfile(skill_md) and "SOURCES.md" not in read_text(skill_md):
-        errors.append("SKILL.md should mention SOURCES.md for maintainers")
+    if os.path.isfile(skill_md):
+        t = read_text(skill_md)
+        if "SOURCES.md" not in t:
+            errors.append("SKILL.md should mention SOURCES.md")
+        if "reference/" in t:
+            errors.append("SKILL.md must not reference legacy reference/ paths")
 
     if errors:
         for e in errors:

@@ -4,6 +4,8 @@
 
 **Corpus status:** **PARTIALLY SOURCE-AUDITED** — structural registry and major corrections applied; vendor manual revisions and project-specific protocols remain maintainer-verified over time.
 
+**Knowledge layout (2026-10-05):** Flat `reference/` removed. Content lives under `decision/` (problem routing), optional `techniques/` (mechanisms), `platforms/` (conditional). See [engineering-doctrine.md](engineering-doctrine.md).
+
 ## Summary
 
 | Metric | Count |

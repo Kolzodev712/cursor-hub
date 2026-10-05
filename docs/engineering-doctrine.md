@@ -7,7 +7,7 @@ cursor-hub separates **policy**, **knowledge**, **project truth**, and **enforce
 | Layer | Location | Role |
 |-------|----------|------|
 | **Rules** | `.cursor/rules/` | Short ambient policy (classify, consult doctrine, evidence bar) |
-| **Skills** | `.cursor/skills/` | Deep reusable doctrine; loaded progressively via the skill router |
+| **Skills** | `.cursor/skills/engineering-doctrine/` | Layered knowledge: **decision** → optional **techniques** / **platforms** (see below) |
 | **Project doctrine** | `.cursor/doctrine/` | Objectives, invariants, architecture, workload, findings, component map |
 | **Hooks** | `.cursor/hooks/` + `hooks.json` | Mechanical gates at meaningful boundaries (first write to classified paths) |
 | **Commands** | `.cursor/commands/` | Optional explicit workflows (design review, gates, bugfix) |
@@ -29,6 +29,32 @@ Generic skill text is classified so agents do not confuse mechanisms with benchm
 **Sources** ([skills/engineering-doctrine/SOURCES.md](../skills/engineering-doctrine/SOURCES.md)) establish mechanisms and scope limits (“does not establish”). **Project doctrine** holds objectives, invariants, and machine facts. **Policy** holds evidence thresholds. Maintainers audit changes in [doctrine-source-audit.md](doctrine-source-audit.md); run `python3 tools/validate_doctrine_sources.py` in CI.
 
 Runtime agents should rely on **verified local doctrine + project facts + measurement**, not ad-hoc web search, unless updating doctrine or covering a gap marked UNRESOLVED.
+
+## Knowledge architecture (inside the skill)
+
+The corpus is **not an encyclopedia** of algorithms, CPU tricks, or frameworks.
+
+```text
+Core policy (ambient rule + SKILL.md router)
+        ↓
+decision/          — problem recognition & questions (default load)
+        ↓
+techniques/        — optional mechanisms (only when routed)
+        ↓
+platforms/         — conditional compiler/CPU/OS/library facts
+        ↓
+.cursor/doctrine/  — project objectives, workload, machine facts
+        ↓
+measurement / evidence
+```
+
+**Incompleteness is intentional.** Missing technique/platform files → declare **KNOWLEDGE GAP**, research authoritative sources (SOURCES.md tiers), or measure — do not guess from model memory.
+
+**Promotion:** Project research does not auto-enter cursor-hub. Promote only reusable, source-audited knowledge ([AGENTS.md](../AGENTS.md)).
+
+**Research escalation:** When local verified knowledge is insufficient, state what fact is missing, why it matters, and which authority to consult; mark decisions blocked/conditional if research unavailable.
+
+**Future candidate decision domains** (not implemented until experiment proves need): `compiler-codegen`, `latency-throughput` / scheduling-backpressure.
 
 ## Install
 
@@ -63,7 +89,7 @@ Edit `.cursor/doctrine/components.json`:
         ".cursor/doctrine/workload.md"
       ],
       "required_doctrine_refs": [
-        ".cursor/skills/engineering-doctrine/reference/algorithm-selection.md"
+        ".cursor/skills/engineering-doctrine/decision/algorithm-selection.md"
       ]
     }
   ]

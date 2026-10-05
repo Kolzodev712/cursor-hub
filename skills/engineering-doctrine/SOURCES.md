@@ -416,10 +416,10 @@ Does not establish:
 
 Authority: Tier — **POLICY** (cursor-hub)  
 Publisher: cursor-hub  
-Document: `reference/evidence-requirements.md`  
+Document: `decision/evidence.md`  
 Scope: Agent behavior for performance claims in projects using this hub  
 Verified: 2026-10-05  
-URL: (in-repo) `skills/engineering-doctrine/reference/evidence-requirements.md`  
+URL: (in-repo) `skills/engineering-doctrine/decision/evidence.md`  
 
 Supports:
 

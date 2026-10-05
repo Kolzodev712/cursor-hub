@@ -1,61 +1,75 @@
 ---
 name: engineering-doctrine
 description: >-
-  Source-backed decision router for systems engineering — algorithms, memory, concurrency,
-  SIMD, I/O, benchmarking, evidence. Use when choosing representations, optimizing hot
-  paths, designing concurrency, or claiming performance. Load only references relevant
-  to the decision; see SOURCES.md for provenance.
+  Layered engineering doctrine: decision domains, optional techniques/platforms,
+  project facts, evidence. Routes minimal verified context; escalates knowledge gaps.
+  Use for representation, hot paths, concurrency, performance claims — not trivial edits.
 ---
 
-# Engineering doctrine (decision router)
+# Engineering doctrine — router
 
-## Epistemic model (read once)
+## Corpus is intentionally incomplete
 
-| Class | Meaning |
-|-------|---------|
-| **SPEC** | Language/ISA/protocol spec guarantee |
-| **IMPLEMENTATION** | Compiler, std version, CPU family, tool behavior (scoped) |
-| **EMPIRICAL** | True only with project measurement |
-| **HEURISTIC** | Investigation guide, not a law |
-| **POLICY** | cursor-hub / project agent behavior |
+Local doctrine provides **verified decision frameworks**, not exhaustive engineering knowledge. Missing technique/platform files → **research or measure**, not model-memory authority. See [decision/evidence.md](decision/evidence.md).
 
-Provenance registry: [SOURCES.md](SOURCES.md) (maintainer-facing, not loaded for every task). Performance claims require project evidence ([reference/evidence-requirements.md](reference/evidence-requirements.md)).
+## Layer model
 
-**Do not** web-search during normal tasks unless updating doctrine or targeting uncovered hardware/libs.
+```text
+Core policy (ambient rule + this router)
+  → decision/     (what kind of problem?)
+  → techniques/   (optional mechanisms — load only if candidate)
+  → platforms/    (conditional — project toolchain/CPU)
+  → .cursor/doctrine/  (project facts)
+  → measurement
+```
 
-## When to use
+Provenance: [SOURCES.md](SOURCES.md) (maintainers; do not load entire file for every task).
 
-- Representation or **algorithm** choice on a hot or correctness-critical path
-- **Layout**, **cache/coherence**, **allocation** changes
-- **Concurrency** / **atomics** design
-- **SIMD** or vectorization
-- **Wire/parse** path changes
-- Any **performance claim** → pair with evidence requirements
+## Routing procedure
 
-**Do not use** for trivial renames/comments with no semantic or performance impact.
+1. **DOMAIN_IDENTIFIED** — pick **one** primary decision file (at most **two** if tightly coupled, e.g. algorithm-selection + data-layout).
+2. **PROJECT_FACTS_MISSING** — read `.cursor/doctrine/` objectives/invariants/workload as needed; stop if blocked.
+3. **LOCAL_KNOWLEDGE_SUFFICIENT** — answer with decision questions + established SPEC/IMPLEMENTATION facts only.
+4. **TECHNIQUE_INVESTIGATION_REQUIRED** — load **one** `techniques/*.md` named by decision “Possible next investigations”.
+5. **PLATFORM_KNOWLEDGE_REQUIRED** — consult SOURCES + authoritative docs; scope IMPLEMENTATION to project CPU/toolchain.
+6. **EXTERNAL_RESEARCH_REQUIRED** — declare **KNOWLEDGE GAP** (missing fact, why it matters, authority to consult); no fabrication.
+7. **MEASUREMENT_REQUIRED** — EMPIRICAL claims need benchmark/profile tier from decision/benchmarking.md.
+8. **DECISION_READY** — options, policy checks, verification plan, accept/reject.
 
-## Decision hierarchy
+**Context rule:** never load `techniques/` or `platforms/` catalogs up front.
 
-Project `.cursor/doctrine/` objectives → invariants → architecture → workload **override** generic doctrine.
+## Knowledge boundary (policy)
 
-## Router — load **one or two** references by decision type
+If verified local doctrine does not cover a required fact, **do not** state it as established. Form hypotheses, research authoritative sources (see SOURCES tiers), classify scope, or mark the decision **blocked/conditional**.
 
-| Decision type | Read |
-|---------------|------|
-| Map vs vec vs tree; hash vs sort; batching | [algorithm-selection.md](reference/algorithm-selection.md) |
-| Struct layout, repr, SoA/AoS (no perf claim yet) | [data-layout.md](reference/data-layout.md) |
-| Access pattern / bandwidth / working set | [memory-locality.md](reference/memory-locality.md) |
-| False sharing, coherence, scaling across cores | [cpu-caches.md](reference/cpu-caches.md) |
-| Heap churn, pools, allocator swap | [allocation.md](reference/allocation.md) |
-| Threads, queues, runtime choice | [concurrency.md](reference/concurrency.md) |
-| Memory orders, atomics, lock-free | [atomics.md](reference/atomics.md) |
-| Auto-vec vs intrinsics vs target features | [simd.md](reference/simd.md) |
-| Protocol framing, copies, batching | [networking-serialization.md](reference/networking-serialization.md) |
-| Benchmark design / interpreting perf | [benchmarking.md](reference/benchmarking.md) |
-| Required proof before claiming “faster” | [evidence-requirements.md](reference/evidence-requirements.md) |
+## Decision domain index
 
-Combine at most **two** references (e.g. algorithm-selection + data-layout for representation change). Stop when blocked on missing **workload.md** facts.
+| If the decision is about… | Load |
+|---------------------------|------|
+| Map/vec/tree, hash vs sort | [decision/algorithm-selection.md](decision/algorithm-selection.md) |
+| Struct layout, repr, SoA/AoS question | [decision/data-layout.md](decision/data-layout.md) |
+| Bandwidth, working set, false sharing | [decision/memory.md](decision/memory.md) |
+| Heap churn, pools, allocator | [decision/allocation.md](decision/allocation.md) |
+| Threads, queues, tasks | [decision/concurrency.md](decision/concurrency.md) |
+| Memory orders, atomics | [decision/atomics.md](decision/atomics.md) |
+| Compute-bound, vectorization, codegen | [decision/cpu-execution.md](decision/cpu-execution.md) |
+| Wire format, parse, I/O path | [decision/io.md](decision/io.md) |
+| Benchmarks, profiles | [decision/benchmarking.md](decision/benchmarking.md) |
+| Claims, evidence, gaps | [decision/evidence.md](decision/evidence.md) |
+
+## Technique index (load only when routed)
+
+| Technique file | After domain |
+|----------------|--------------|
+| [techniques/simd.md](techniques/simd.md) | cpu-execution |
+
+See [techniques/README.md](techniques/README.md).
+
+## Future candidate domains (not in corpus)
+
+- `compiler-codegen` (if codegen routing fails repeatedly)
+- `latency-throughput` / scheduling-backpressure (if concurrency+benchmarking insufficient in trading-system experiment)
 
 ## Output shape
 
-**Trigger → questions → established facts (with class) → options → policy checks → verification plan → accept/reject.**
+Trigger → routing state → decision questions → (optional technique/platform) → evidence plan → accept/reject.

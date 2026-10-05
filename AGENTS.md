@@ -17,11 +17,17 @@ This file is the single contract for contributors and agents working on the **cu
 
 ## Engineering-doctrine content
 
+Knowledge layout: **`decision/`** (routing) → **`techniques/`** (optional) → **`platforms/`** (conditional) — see [docs/engineering-doctrine.md](docs/engineering-doctrine.md).
+
 When changing `skills/engineering-doctrine/`:
 
-- Do **not** add normative/implementation claims from model memory alone — register sources in [skills/engineering-doctrine/SOURCES.md](skills/engineering-doctrine/SOURCES.md) and tag claim class (SPEC / IMPLEMENTATION / EMPIRICAL / HEURISTIC / POLICY) in reference files.
-- EMPIRICAL performance claims belong in project measurement, not as universal doctrine.
-- Architecture-specific numbers (cache line size, CPU family) belong in project `.cursor/doctrine/workload.md`, not generic references.
+- Do **not** add normative/implementation claims from model memory alone — register sources in [SOURCES.md](skills/engineering-doctrine/SOURCES.md) and tag claim class in decision/technique files.
+- Do **not** add technique encyclopedias or CPU/framework catalogs “just in case.”
+- Do **not** auto-promote project-specific findings; promotion requires reuse case + source audit.
+- Prefer **decision criteria** over lists of optimizations.
+- New **decision domain** only if existing domains cannot express a recurring routing failure (record candidates in docs until proven).
+- New **technique** file only with explicit parent decision domain and routing trigger.
+- EMPIRICAL performance claims belong in project measurement, not generic doctrine.
 - Run `python3 tools/validate_doctrine_sources.py` with `validate_packs.py`.
 
 ## Validation

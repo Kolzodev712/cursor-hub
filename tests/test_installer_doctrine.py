@@ -113,7 +113,7 @@ class InstallerDoctrineTests(unittest.TestCase):
                         ".cursor/doctrine/invariants.md",
                     ],
                     "required_doctrine_refs": [
-                        ".cursor/skills/engineering-doctrine/reference/evidence-requirements.md",
+                        ".cursor/skills/engineering-doctrine/decision/evidence.md",
                     ],
                 }
             ]
@@ -146,7 +146,7 @@ class InstallerDoctrineTests(unittest.TestCase):
 
         for path in (
             ".cursor/doctrine/invariants.md",
-            ".cursor/skills/engineering-doctrine/reference/evidence-requirements.md",
+            ".cursor/skills/engineering-doctrine/decision/evidence.md",
         ):
             handle_track_read(
                 {

@@ -18,5 +18,8 @@ Follow this hierarchy for substantive code or architecture work (not typos or on
 - **Consult doctrine** via the skill decision router — do not paste entire reference corpora into chat.
 - **Respect overrides:** higher layers in the hierarchy win over micro-optimizations.
 - **Claims:** Do not state performance, latency, or scalability improvements without workload context and a verification plan (benchmark, profile, or test).
+- **Knowledge boundary:** If local verified doctrine (skill `decision/` + SOURCES) does not cover a needed fact, declare a **knowledge gap** and consult authoritative sources — do not present model memory as established engineering truth.
+- **Techniques:** Load `techniques/` only after a decision domain identifies a credible mechanism; absence of a technique file does not forbid research or measurement.
+- **Simplicity:** Identify the limiting resource before advanced techniques; prefer the simplest approach that satisfies project constraints.
 
 Slash commands (design review, gates, bugfix) remain for deliberate audits; they do not replace this baseline.
