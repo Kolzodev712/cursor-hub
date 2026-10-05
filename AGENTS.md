@@ -15,6 +15,16 @@ This file is the single contract for contributors and agents working on the **cu
 - **Follow [docs/authoring-guidelines.md](docs/authoring-guidelines.md):** one concern per rule, command naming `pack-name__task`, verification steps where commands change code, frontmatter for rules.
 - **Present drafts for approval:** For generated or new artifacts (new rules, new commands, new design-log sections beyond the template), **present the full draft to the user and wait for explicit approval before writing files.** This applies when you are creating or editing hub content (e.g. a new pack, a new rule, or a new command). See the **present-before-writing** rule in `_shared`; workflow and design-log methodology reference it where relevant.
 
+## Engineering-doctrine content
+
+When changing `skills/engineering-doctrine/`:
+
+- Do **not** add normative/implementation claims from model memory alone — register sources in [skills/engineering-doctrine/SOURCES.md](skills/engineering-doctrine/SOURCES.md) and tag claim class (SPEC / IMPLEMENTATION / EMPIRICAL / HEURISTIC / POLICY) in reference files.
+- EMPIRICAL performance claims belong in project measurement, not as universal doctrine.
+- Architecture-specific numbers (cache line size, CPU family) belong in project `.cursor/doctrine/workload.md`, not generic references.
+- Run `python3 tools/validate_doctrine_sources.py` with `validate_packs.py`.
+
 ## Validation
 
 - After adding or changing packs or rules, run `python tools/validate_packs.py` and update [CATALOG.md](CATALOG.md) and [README.md](README.md) as needed.
+- After changing engineering-doctrine references or SOURCES.md, run `python3 tools/validate_doctrine_sources.py`.

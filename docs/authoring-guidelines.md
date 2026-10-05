@@ -124,3 +124,13 @@ globs:
 - **Docs:** Public items must have doc comments; include examples for non-obvious APIs.
 ```
 
+## Engineering-doctrine references
+
+When editing `skills/engineering-doctrine/reference/*.md`:
+
+- Every reference file needs **`## Epistemic status`** and **`## Sources`** (source IDs from [SOURCES.md](../skills/engineering-doctrine/SOURCES.md)).
+- Classify claims: **SPEC**, **IMPLEMENTATION**, **EMPIRICAL**, **HEURISTIC**, **POLICY** — do not state EMPIRICAL truths as SPEC.
+- Register new sources in `SOURCES.md` with Authority tier, Verified date, URL, and **Does not establish**.
+- Do not copy vendor manuals into the repo; distill decision rules.
+- Run `python3 tools/validate_doctrine_sources.py` (structural check only; human verification remains required).
+

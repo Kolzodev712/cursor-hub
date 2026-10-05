@@ -1,25 +1,49 @@
 # Memory locality
 
+## Epistemic status
+
+Verified: 2026-10-05  
+Scope: Access-pattern reasoning; not a substitute for profiling.  
+Claim classes: IMPLEMENTATION, EMPIRICAL, HEURISTIC
+
 ## Trigger
 
-Profile shows memory-bound behavior or unpredictable latency on sequential work.
+Profile/memory counters suggest bandwidth or cache misses; strided/random access in hot path.
 
-## Questions
+## Established facts
 
-- Access pattern: sequential, strided, random?
-- Working set vs last-level cache size?
-- Allocator-induced scatter?
+**[IMPLEMENTATION]** CPU memory hierarchies reward predictable access; sequential scans often hit cache lines efficiently — **until** working set exceeds cache capacity (hardware-specific). Sources: INTEL-OPT-MANUAL, AMD-ZEN4-OPT (scoped).
 
-## Reasoning
+**[IMPLEMENTATION]** Prefetch instructions/hardware prefetchers may hide latency but **do not remove bandwidth limits**. Sources: vendor optimization manuals (scoped).
 
-- Improve **sequential** access before micro-optimizing instructions.
-- Split cold metadata from hot arrays.
-- Consider prefetch only after layout is sane — prefetch hides latency, not bandwidth limits.
+## Decision questions
 
-## Evidence
+- Access pattern: sequential, strided, random, pointer-chasing?
+- Working set size vs last-level cache (from **project** machine facts)?
+- Allocator-induced scatter (see allocation.md)?
 
-Hardware counters (LLC misses, bandwidth) or allocator profiles.
+## Engineering guidance
 
-## Accept when
+**[HEURISTIC]** When memory-bound, improve access predictability and working-set size before instruction-level tweaks — **verify** with counters.
 
-Access pattern aligns with measured miss profile or change is rejected with workload proof that memory is not the limiter.
+**[HEURISTIC]** Split cold metadata from hot arrays when profile shows mixed access.
+
+**[HEURISTIC]** Prefetch only after layout/access pattern is understood; measure on target.
+
+## Evidence required
+
+**[EMPIRICAL]** LLC miss rate, bandwidth counters, or allocator profiles — then intervention + remeasure.
+
+## Observation → intervention
+
+**[POLICY]** A miss counter or flamegraph hotspot **hypothesizes** a limiter; it does not prove a specific representation change will help until A/B measured.
+
+## Accept / reject
+
+**Accept** when access-pattern story matches **measurement** or change is rejected with evidence memory is not the limiter.
+
+## Sources
+
+- INTEL-OPT-MANUAL
+- AMD-ZEN4-OPT
+- LINUX-PERF

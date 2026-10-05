@@ -1,45 +1,61 @@
 ---
 name: engineering-doctrine
 description: >-
-  Decision router for systems engineering — algorithms, memory, concurrency, SIMD,
-  I/O, benchmarking, and evidence. Use when choosing representations, optimizing hot
-  paths, designing concurrency, or claiming performance. Load only the reference
-  files relevant to the current decision.
+  Source-backed decision router for systems engineering — algorithms, memory, concurrency,
+  SIMD, I/O, benchmarking, evidence. Use when choosing representations, optimizing hot
+  paths, designing concurrency, or claiming performance. Load only references relevant
+  to the decision; see SOURCES.md for provenance.
 ---
 
 # Engineering doctrine (decision router)
 
+## Epistemic model (read once)
+
+| Class | Meaning |
+|-------|---------|
+| **SPEC** | Language/ISA/protocol spec guarantee |
+| **IMPLEMENTATION** | Compiler, std version, CPU family, tool behavior (scoped) |
+| **EMPIRICAL** | True only with project measurement |
+| **HEURISTIC** | Investigation guide, not a law |
+| **POLICY** | cursor-hub / project agent behavior |
+
+Provenance registry: [SOURCES.md](SOURCES.md) (maintainer-facing, not loaded for every task). Performance claims require project evidence ([reference/evidence-requirements.md](reference/evidence-requirements.md)).
+
+**Do not** web-search during normal tasks unless updating doctrine or targeting uncovered hardware/libs.
+
 ## When to use
 
-- Choosing **data structures / algorithms** for a hot or allocation-sensitive path.
-- **Memory layout**, cache behavior, or **allocation** strategy changes.
-- **Concurrency**, atomics, or cross-thread sharing.
-- **SIMD** or vectorization candidates.
-- **Networking / serialization** on critical paths.
-- Any **performance or scalability claim** — pair with evidence requirements.
+- Representation or **algorithm** choice on a hot or correctness-critical path
+- **Layout**, **cache/coherence**, **allocation** changes
+- **Concurrency** / **atomics** design
+- **SIMD** or vectorization
+- **Wire/parse** path changes
+- Any **performance claim** → pair with evidence requirements
 
-## Decision hierarchy (reminder)
+**Do not use** for trivial renames/comments with no semantic or performance impact.
+
+## Decision hierarchy
 
 Project `.cursor/doctrine/` objectives → invariants → architecture → workload **override** generic doctrine.
 
-## Router — pick **one or two** references, read them, apply to the decision
+## Router — load **one or two** references by decision type
 
-| Trigger | Read |
-|---------|------|
-| Choosing map vs array vs tree; hash vs sort; batching | [reference/algorithm-selection.md](reference/algorithm-selection.md) |
-| Struct layout, SoA vs AoS, indirection, padding | [reference/data-layout.md](reference/data-layout.md) |
-| Sequential access, prefetch, working set size | [reference/memory-locality.md](reference/memory-locality.md) |
-| L1/L2 misses, false sharing, line size awareness | [reference/cpu-caches.md](reference/cpu-caches.md) |
-| Heap churn, pools, stack buffers, amortization | [reference/allocation.md](reference/allocation.md) |
-| Threads, locks, channels, lock-free, ordering | [reference/concurrency.md](reference/concurrency.md) |
-| Atomic RMW, memory order, fences | [reference/atomics.md](reference/atomics.md) |
-| Auto-vectorization vs intrinsics, portability | [reference/simd.md](reference/simd.md) |
-| Framing, copies, parsing on wire/disk | [reference/networking-serialization.md](reference/networking-serialization.md) |
-| Microbench, regression, profiling discipline | [reference/benchmarking.md](reference/benchmarking.md) |
-| What proof is required before merging | [reference/evidence-requirements.md](reference/evidence-requirements.md) |
+| Decision type | Read |
+|---------------|------|
+| Map vs vec vs tree; hash vs sort; batching | [algorithm-selection.md](reference/algorithm-selection.md) |
+| Struct layout, repr, SoA/AoS (no perf claim yet) | [data-layout.md](reference/data-layout.md) |
+| Access pattern / bandwidth / working set | [memory-locality.md](reference/memory-locality.md) |
+| False sharing, coherence, scaling across cores | [cpu-caches.md](reference/cpu-caches.md) |
+| Heap churn, pools, allocator swap | [allocation.md](reference/allocation.md) |
+| Threads, queues, runtime choice | [concurrency.md](reference/concurrency.md) |
+| Memory orders, atomics, lock-free | [atomics.md](reference/atomics.md) |
+| Auto-vec vs intrinsics vs target features | [simd.md](reference/simd.md) |
+| Protocol framing, copies, batching | [networking-serialization.md](reference/networking-serialization.md) |
+| Benchmark design / interpreting perf | [benchmarking.md](reference/benchmarking.md) |
+| Required proof before claiming “faster” | [evidence-requirements.md](reference/evidence-requirements.md) |
 
-Do **not** load all references for every task. Stop after the decision is justified or blocked on missing workload facts — then read project `workload.md` or ask.
+Combine at most **two** references (e.g. algorithm-selection + data-layout for representation change). Stop when blocked on missing **workload.md** facts.
 
-## Output shape for engineering decisions
+## Output shape
 
-State: **trigger → questions answered → options → chosen approach → exceptions → verification plan → accept/reject criteria**.
+**Trigger → questions → established facts (with class) → options → policy checks → verification plan → accept/reject.**

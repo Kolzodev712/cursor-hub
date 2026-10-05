@@ -1,23 +1,43 @@
 # Evidence requirements
 
+## Epistemic status
+
+Verified: 2026-10-05  
+Scope: **POLICY** (cursor-hub agent behavior).  
+Claim classes: POLICY (primary); references EMPIRICAL expectations
+
 ## Trigger
 
-Any merge request that claims faster, smaller, more scalable, or "cache-friendly" behavior.
+Any proposed merge that claims faster, smaller, more scalable, “cache-friendly,” or lower latency.
+
+## Policy (cursor-hub)
+
+**[POLICY]** Sources establish **mechanisms and API guarantees**; **measurements** establish application performance; **project doctrine** establishes objectives/invariants; **this file** establishes what agents must obtain before claims.
+
+**[POLICY]** Project `.cursor/doctrine/` objectives and invariants **override** generic optimization preferences.
 
 ## Required minimum
 
-- **Workload cite:** Point to project `workload.md` or state new assumptions explicitly.
-- **Hypothesis:** What limiter was targeted (CPU, memory, IO, lock, alloc)?
-- **Method:** Test, benchmark, or profile — command and environment noted.
-- **Result:** Metric delta with acceptable noise band.
-- **Regression guard:** Test or benchmark added when claim is durable.
+- **Workload cite:** `workload.md` or explicit new assumptions.
+- **Hypothesis:** Targeted limiter (CPU, memory, IO, lock, alloc, parse, etc.).
+- **Method:** Test/benchmark/profile — command, profile, toolchain noted.
+- **Result:** Metric delta with noise band.
+- **Regression guard:** Test or benchmark when claim is durable.
 
 ## Reject when
 
-- Only complexity class cited without size constants.
-- Synthetic microbench unrelated to production path.
-- Optimization violates documented invariants.
+**[POLICY]** Complexity class only; unrelated microbench; violates invariants; counter observation treated as proof of fix.
 
 ## Accept when
 
-Evidence matches accept/reject criteria in the design or PR description and hooks/project doctrine reads are satisfied for classified paths.
+**[POLICY]** Evidence matches stated accept criteria; classified-path hook reads satisfied where installed.
+
+## Relationship to hooks
+
+Hooks record **file read at fingerprint** — not comprehension. Policy still requires using read material in the decision.
+
+## Sources
+
+- POLICY-CURSOR-HUB-EVIDENCE
+- RUST-CARGO-PROFILES
+- benchmarking.md (method tiers)

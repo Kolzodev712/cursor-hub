@@ -1,29 +1,49 @@
 # Allocation
 
+## Epistemic status
+
+Verified: 2026-10-05  
+Scope: Rust allocation API; allocator choice is project-specific.  
+Claim classes: SPEC, IMPLEMENTATION, EMPIRICAL, HEURISTIC, POLICY
+
 ## Trigger
 
-Allocator time or GC pressure appears in profile; latency spikes correlate with churn.
+Allocator time in profile; latency spikes; considering pools/arenas/global allocator swap.
 
-## Questions
+## Established facts
 
-- Object lifetime: scoped, pooled, or global?
-- Size distribution of allocations?
-- Can stack or arena cover a request/work unit?
+**[SPEC]** Rust allocation goes through the global allocator unless a custom `GlobalAlloc` / allocator API is used (see current stable docs for `Allocator` traits in your toolchain). Sources: Rust `alloc` / `GlobalAlloc` documentation (pin in project if non-default).
 
-## Reasoning
+**[IMPLEMENTATION]** `Vec`/`Box` allocation behavior is defined at API level; allocator underneath is swappable at build/runtime per project setup.
 
-- Remove allocations from inner loops before switching allocators.
-- Pool when size classes stable and reuse is clear; avoid unbounded pool growth.
-- Prefer passing buffers in/out over allocating return values on hot paths.
+## Decision questions
 
-## Exceptions
+- Is allocation **measurable** on the critical path (profile)?
+- Count, size distribution, lifetimes?
+- Which **allocator** is actually linked (system, mimalloc, jemalloc, arena — document in project)?
+- Do pools add retention, synchronization, or complexity?
 
-Cold paths and one-time setup — clarity over pools.
+## Engineering guidance
 
-## Evidence
+**[HEURISTIC]** Reduce allocation **count** on hot paths when profile shows alloc cost — then remeasure.
 
-Allocator flame graph or GC stats; before/after latency percentiles on load test.
+**[HEURISTIC]** Pools/arenas when size classes and lifetimes are stable — evaluate memory retention and thread synchronization costs.
 
-## Accept when
+**[HEURISTIC]** Pass buffers in/out instead of allocating returns when API allows — clarity and alloc count trade-offs.
 
-Allocation count or bytes/op measurably drops or change deferred with documented non-hot path.
+**[HEURISTIC]** Switching global allocator is **IMPLEMENTATION-specific** — follow that allocator’s docs; require benchmark on **your** binary.
+
+## Evidence required
+
+**[EMPIRICAL]** Allocators flame graph / DHAT / heap profiling; p50/p99 before/after on load test.
+
+## Accept / reject
+
+**Accept** when alloc metrics improve or change deferred with proof path is cold.
+
+**Reject** treating heuristics as laws (“never allocate in loop”) without profile.
+
+## Sources
+
+- RUST-STD-VEC
+- RUST-CARGO-PROFILES (for build-linked behavior context)

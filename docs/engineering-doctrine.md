@@ -14,6 +14,22 @@ cursor-hub separates **policy**, **knowledge**, **project truth**, and **enforce
 
 Normal prompts should inherit policy from rules; the agent loads skills and project doctrine as needed. Commands remain for deliberate audits and structured workflows.
 
+## Epistemic model (doctrine content)
+
+Generic skill text is classified so agents do not confuse mechanisms with benchmarks:
+
+| Class | Role |
+|-------|------|
+| **SPEC** | Spec/API guarantees (Rust Reference, std docs, RFCs) |
+| **IMPLEMENTATION** | Scoped to a compiler version, std build, CPU family, or tool |
+| **EMPIRICAL** | Application performance — requires project measurement |
+| **HEURISTIC** | What to investigate; not universal truth |
+| **POLICY** | cursor-hub / project behavior (evidence before “faster”) |
+
+**Sources** ([skills/engineering-doctrine/SOURCES.md](../skills/engineering-doctrine/SOURCES.md)) establish mechanisms and scope limits (“does not establish”). **Project doctrine** holds objectives, invariants, and machine facts. **Policy** holds evidence thresholds. Maintainers audit changes in [doctrine-source-audit.md](doctrine-source-audit.md); run `python3 tools/validate_doctrine_sources.py` in CI.
+
+Runtime agents should rely on **verified local doctrine + project facts + measurement**, not ad-hoc web search, unless updating doctrine or covering a gap marked UNRESOLVED.
+
 ## Install
 
 ```bash

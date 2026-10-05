@@ -1,35 +1,53 @@
-# Algorithm selection
+# Algorithm and collection selection
+
+## Epistemic status
+
+Verified: 2026-10-05  
+Scope: Rust std collections + generic complexity reasoning.  
+Claim classes: SPEC, IMPLEMENTATION, EMPIRICAL, HEURISTIC
 
 ## Trigger
 
-You need asymptotic or constant-factor behavior on a **dominant operation** (lookup, insert, scan, join, rank).
+Choosing map vs vector vs tree; hash vs sort; batching; hot lookup/insert path.
 
-## Questions
+## Established facts
 
-- What are **N**, growth rate, and **bounded vs unbounded** domain?
-- Is the key space **dense** enough for direct indexing?
-- Read-heavy vs write-heavy vs mixed? Delete frequency?
-- Need ordering, range queries, or only point lookup?
-- Worst-case latency vs average throughput — which matters?
+**[SPEC / IMPLEMENTATION]** `HashMap` documents expected average O(1) lookup/insert at algorithmic level; `BTreeMap` documents O(log n) lookup/insert; module docs summarize collection costs. Sources: RUST-STD-HASHMAP, RUST-STD-BTREEMAP, RUST-STD-COLLECTIONS.
 
-## Reasoning
+**[SPEC]** `Vec` supports O(1) indexed access when indices are valid. Source: RUST-STD-VEC.
 
-- **Dense, small, stable domain:** Compare direct table / bitmap vs hash — measure cache footprint, not just O().
-- **Sparse string/struct keys:** Hash map only after ruling out interning / perfect hashing when inputs are constrained.
-- **Ordering/range:** Tree or sorted array + binary search — pay log factor only when queries require order.
-- **Batching:** Amortize structure maintenance when updates arrive in bursts.
+**[EMPIRICAL]** Asymptotic class **does not** prove faster for your N, key type, hash cost, or memory footprint — constants and locality dominate at moderate N.
 
-## Exceptions
+## Decision questions
 
-- Correctness or invariant checks dominate — prefer clarity until profile shows otherwise.
-- N is tiny and fixed — complexity notation is irrelevant; measure constants.
+- N, growth, **dense vs sparse** key domain?
+- Point lookup vs range/ordering requirements?
+- Read/write/delete mix; latency vs throughput priority?
+- Is the path **actually hot** (profile)?
 
-## Evidence
+## Engineering guidance
 
-- Identify hot call site in profile or trace.
-- Compare candidates on **representative** size distribution from `workload.md`.
-- Regression test for functional equivalence before/after.
+**[HEURISTIC]** **Dense, small, bounded integer domain:** evaluate direct indexing (`Vec`, bitset) vs hash — compare memory and branch behavior, then benchmark.
 
-## Accept when
+**[HEURISTIC]** **Sparse/opaque keys:** `HashMap` is a default **candidate**, not a mandate; consider `BTreeMap` when ordering/range queries are required.
 
-Chosen structure matches workload facts and measurement (or explicit lack of hot path) is documented.
+**[HEURISTIC]** Interning / perfect hashing are **specialized** tools — consider only when domain constraints are documented and simpler structures fail measurement.
+
+**[HEURISTIC]** Batch updates when bursts amortize structure maintenance.
+
+## Evidence required
+
+**[EMPIRICAL]** Representative size distribution from `workload.md`; A/B on target hardware; correctness tests.
+
+## Accept / reject
+
+**Accept** when choice matches workload facts **and** measurement (or documented non-hot path).
+
+**Reject** “HashMap is O(1) so always use HashMap” or “Vec is contiguous so always faster.”
+
+## Sources
+
+- RUST-STD-COLLECTIONS
+- RUST-STD-VEC
+- RUST-STD-HASHMAP
+- RUST-STD-BTREEMAP
