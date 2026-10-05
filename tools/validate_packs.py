@@ -8,10 +8,13 @@ Exit non-zero on any failure.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 import sys
 
+_REPO_ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+_SKILLS_ROOT = os.path.join(_REPO_ROOT, "skills")
 
 CURSOR_DIR = ".cursor"
 RULES = "rules"
@@ -125,6 +128,48 @@ def validate_pack(pack_path: str, pack_name: str) -> list[str]:
                 path = os.path.join(agents_dir, name)
                 if os.path.isfile(path) and not name.endswith(".md"):
                     errors.append(f"{pack_name}: agent {name} should be .md")
+
+    # pack.yml skills dependencies
+    pack_yml = os.path.join(pack_path, PACK_YML)
+    if os.path.isfile(pack_yml):
+        in_skills = False
+        try:
+            with open(pack_yml, "r", encoding="utf-8") as f:
+                for raw in f:
+                    line = raw.strip()
+                    if not line or line.startswith("#"):
+                        continue
+                    if line.startswith("- ") and in_skills:
+                        skill = line[2:].strip().strip("'\"")
+                        if skill and not os.path.isdir(os.path.join(_SKILLS_ROOT, skill)):
+                            errors.append(f"{pack_name}: skill dependency not found in hub: {skill}")
+                        continue
+                    in_skills = False
+                    if line.startswith("skills:"):
+                        in_skills = True
+                        rest = line.split(":", 1)[1].strip().strip("'\"")
+                        if rest and not os.path.isdir(os.path.join(_SKILLS_ROOT, rest)):
+                            errors.append(f"{pack_name}: skill dependency not found in hub: {rest}")
+        except OSError as e:
+            errors.append(f"{pack_name}: cannot read {PACK_YML}: {e}")
+
+    # hooks fragment JSON
+    for hooks_name in ("hooks.fragment.json", "hooks.json"):
+        hooks_path = os.path.join(cursor_dir, hooks_name)
+        if os.path.isfile(hooks_path):
+            try:
+                with open(hooks_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                if not isinstance(data, dict) or "hooks" not in data:
+                    errors.append(f"{pack_name}: {hooks_name} must be an object with 'hooks'")
+            except (OSError, json.JSONDecodeError) as e:
+                errors.append(f"{pack_name}: invalid {hooks_name}: {e}")
+
+    shipped_doctrine = os.path.join(cursor_dir, "doctrine")
+    if os.path.isdir(shipped_doctrine):
+        errors.append(
+            f"{pack_name}: must not ship {CURSOR_DIR}/doctrine/ — use doctrine-bootstrap/ for one-time templates"
+        )
 
     return errors
 

@@ -1,0 +1,22 @@
+---
+description: "Ambient engineering policy — classify work, consult doctrine, respect project truth, require evidence"
+alwaysApply: true
+---
+
+# Engineering discipline (ambient)
+
+Follow this hierarchy for substantive code or architecture work (not typos or one-line fixes):
+
+1. **Project objectives** → **invariants** → **architecture** → **workload facts** (under `.cursor/doctrine/`).
+2. **Generic engineering doctrine** (invoke the **engineering-doctrine** skill; load only topics relevant to the decision).
+3. **Task design** → **implementation** → **measured evidence**.
+
+## On each substantive task
+
+- **Classify** the affected component using `.cursor/doctrine/components.json` (add or refine entries when scope is new).
+- **Read** required project doctrine files for that component before the first edit to classified paths (hooks enforce this when configured).
+- **Consult doctrine** via the skill decision router — do not paste entire reference corpora into chat.
+- **Respect overrides:** higher layers in the hierarchy win over micro-optimizations.
+- **Claims:** Do not state performance, latency, or scalability improvements without workload context and a verification plan (benchmark, profile, or test).
+
+Slash commands (design review, gates, bugfix) remain for deliberate audits; they do not replace this baseline.

@@ -1,0 +1,6 @@
+name: engineering-doctrine
+description: Ambient engineering policy, project doctrine bootstrap, skills, and hook enforcement for classified components.
+version: "0.1.0"
+skills:
+  - engineering-doctrine
+hooks_merge: true

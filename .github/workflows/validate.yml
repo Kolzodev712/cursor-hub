@@ -19,3 +19,6 @@ jobs:
 
       - name: Validate pack structure
         run: python tools/validate_packs.py
+
+      - name: Installer and doctrine tests
+        run: python3 -m unittest discover -s tests -v

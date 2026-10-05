@@ -4,23 +4,34 @@ Used by both tools/install.py and the cursor-hub CLI.
 """
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import sys
 
+from cursor_hub.hooks_merge import load_hooks_json, merge_hooks_json, write_hooks_json
+from cursor_hub.pack_yml import read_pack_yml
+
 PACKS_ROOT = "packs"
+SKILLS_ROOT = "skills"
 CURSOR_DIR = ".cursor"
 PACK_YML = "pack.yml"
 RULES = "rules"
 COMMANDS = "commands"
 AGENTS = "agents"
+HOOKS = "hooks"
 TOOLS_DIR = "tools"
 DESIGN_LOG_DIR = "design-log"
+DOCTRINE_DIR = "doctrine"
 SHARED_PACK = "_shared"
+HOOKS_JSON = "hooks.json"
+HOOKS_FRAGMENT = "hooks.fragment.json"
+DOCTRINE_BOOTSTRAP = "doctrine-bootstrap"
 
 # Only these subdirectories under a pack's `.cursor/` are merged into the target.
 # `.cursor/design-log/` is NEVER merged from packs — project logs (`NNN-*.md`) must survive reinstalls.
 # The installer only bootstraps an empty-ish directory + README.md (see ensure_design_log_dir).
+# `.cursor/doctrine/` is bootstrapped once; project-owned doctrine files are never overwritten.
 CURSOR_SUBDIRS_MERGED_FROM_PACKS = (RULES, COMMANDS, AGENTS)
 
 ALL_RUST_PACKS = [
@@ -191,6 +202,176 @@ def merge_cursor_dir(src: str, dst: str, overwrite: bool, dry_run: bool) -> tupl
     return (r, c, a)
 
 
+def merge_hooks_dir(
+    src_pack: str,
+    target: str,
+    overwrite: bool,
+    dry_run: bool,
+) -> int:
+    """Copy pack `.cursor/hooks/` scripts into target; return count added/refreshed."""
+    src_hooks = os.path.join(src_pack, CURSOR_DIR, HOOKS)
+    if not os.path.isdir(src_hooks):
+        return 0
+    dst_hooks = os.path.join(target, CURSOR_DIR, HOOKS)
+    n = 0
+    for name in os.listdir(src_hooks):
+        src_file = os.path.join(src_hooks, name)
+        if not os.path.isfile(src_file):
+            continue
+        dst_file = os.path.join(dst_hooks, name)
+        if dry_run:
+            print(f"[dry-run] would add {os.path.join(CURSOR_DIR, HOOKS, name)}")
+            n += 1
+            continue
+        os.makedirs(dst_hooks, exist_ok=True)
+        if overwrite or not os.path.exists(dst_file):
+            shutil.copy2(src_file, dst_file)
+            if name.endswith(".py") or name.endswith(".sh"):
+                try:
+                    os.chmod(dst_file, os.stat(dst_file).st_mode | 0o111)
+                except OSError:
+                    pass
+            n += 1
+    return n
+
+
+def merge_hooks_json_from_pack(
+    pack_dir: str,
+    target: str,
+    dry_run: bool,
+) -> bool:
+    """Merge hooks.fragment.json or hooks.json from pack into target hooks.json."""
+    cursor = os.path.join(pack_dir, CURSOR_DIR)
+    fragment_path = os.path.join(cursor, HOOKS_FRAGMENT)
+    if not os.path.isfile(fragment_path):
+        fragment_path = os.path.join(cursor, HOOKS_JSON)
+    if not os.path.isfile(fragment_path):
+        return False
+    try:
+        with open(fragment_path, "r", encoding="utf-8") as f:
+            fragment = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return False
+    if not isinstance(fragment, dict):
+        return False
+    dst = os.path.join(target, CURSOR_DIR, HOOKS_JSON)
+    existing = load_hooks_json(dst)
+    merged = merge_hooks_json(existing, fragment)
+    write_hooks_json(dst, merged, dry_run)
+    return True
+
+
+def copy_skill_tree(
+    repo_root: str,
+    skill_name: str,
+    target: str,
+    overwrite: bool,
+    dry_run: bool,
+    *,
+    _installing: set[str] | None = None,
+) -> tuple[int, list[str]]:
+    """Install skill and nested skill dependencies from skills/<name>/skill-deps.json."""
+    installing = _installing if _installing is not None else set()
+    if skill_name in installing:
+        return 0, []
+    installing.add(skill_name)
+    src = os.path.join(repo_root, SKILLS_ROOT, skill_name)
+    if not os.path.isdir(src):
+        raise FileNotFoundError(f"Skill not found: {skill_name} (expected {src})")
+    deps: list[str] = []
+    deps_file = os.path.join(src, "skill-deps.json")
+    if os.path.isfile(deps_file):
+        try:
+            with open(deps_file, "r", encoding="utf-8") as f:
+                raw = json.load(f)
+            if isinstance(raw, list):
+                deps = [str(x) for x in raw]
+            elif isinstance(raw, dict) and isinstance(raw.get("dependencies"), list):
+                deps = [str(x) for x in raw["dependencies"]]
+        except (OSError, json.JSONDecodeError):
+            pass
+    total = 0
+    for dep in deps:
+        n, _ = copy_skill_tree(repo_root, dep, target, overwrite, dry_run, _installing=installing)
+        total += n
+    dst = os.path.join(target, CURSOR_DIR, "skills", skill_name)
+    if dry_run:
+        print(f"[dry-run] would merge skill {skill_name} -> {os.path.join(CURSOR_DIR, 'skills', skill_name)}/")
+        return total + 1, deps
+    os.makedirs(dst, exist_ok=True)
+    for dirpath, dirnames, filenames in os.walk(src):
+        dirnames[:] = [d for d in dirnames if not d.startswith(".") and d != "__pycache__"]
+        rel = os.path.relpath(dirpath, src)
+        for fname in filenames:
+            if fname == "skill-deps.json":
+                continue
+            src_file = os.path.join(dirpath, fname)
+            rel_dir = rel if rel != "." else ""
+            dst_dir = os.path.join(dst, rel_dir) if rel_dir else dst
+            os.makedirs(dst_dir, exist_ok=True)
+            dst_file = os.path.join(dst_dir, fname)
+            if overwrite or not os.path.exists(dst_file):
+                shutil.copy2(src_file, dst_file)
+                total += 1
+    return total, deps
+
+
+def collect_skill_names(repo_root: str, pack_dirs: list[str]) -> list[str]:
+    seen: set[str] = set()
+    ordered: list[str] = []
+    for pack_dir in pack_dirs:
+        meta = read_pack_yml(pack_dir)
+        for name in meta.get("skills") or []:
+            if name not in seen:
+                seen.add(name)
+                ordered.append(name)
+    return ordered
+
+
+def bootstrap_doctrine(pack_dir: str, target: str, dry_run: bool) -> int:
+    """Copy doctrine-bootstrap/* into .cursor/doctrine/ only when target file is absent."""
+    src = os.path.join(pack_dir, DOCTRINE_BOOTSTRAP)
+    if not os.path.isdir(src):
+        return 0
+    dst_root = os.path.join(target, CURSOR_DIR, DOCTRINE_DIR)
+    n = 0
+    for dirpath, _, filenames in os.walk(src):
+        rel = os.path.relpath(dirpath, src)
+        for fname in filenames:
+            src_file = os.path.join(dirpath, fname)
+            rel_dir = rel if rel != "." else ""
+            dst_dir = os.path.join(dst_root, rel_dir) if rel_dir else dst_root
+            dst_file = os.path.join(dst_dir, fname)
+            if os.path.exists(dst_file):
+                continue
+            if dry_run:
+                print(f"[dry-run] would bootstrap {os.path.join(CURSOR_DIR, DOCTRINE_DIR, rel_dir, fname)}")
+                n += 1
+                continue
+            os.makedirs(dst_dir, exist_ok=True)
+            shutil.copy2(src_file, dst_file)
+            n += 1
+    return n
+
+
+def sync_hub_doctrine_hook(repo_root: str, target: str, overwrite: bool, dry_run: bool) -> None:
+    """Refresh hub-owned doctrine_enforcement.py when engineering-doctrine hooks are installed."""
+    src = os.path.join(repo_root, "cursor_hub", "doctrine_enforcement.py")
+    dst = os.path.join(target, CURSOR_DIR, HOOKS, "doctrine_enforcement.py")
+    if not os.path.isfile(src):
+        return
+    if dry_run:
+        print(f"[dry-run] would sync {os.path.join(CURSOR_DIR, HOOKS, 'doctrine_enforcement.py')} from hub")
+        return
+    if overwrite or not os.path.exists(dst):
+        os.makedirs(os.path.dirname(dst), exist_ok=True)
+        shutil.copy2(src, dst)
+        try:
+            os.chmod(dst, os.stat(dst).st_mode | 0o111)
+        except OSError:
+            pass
+
+
 def read_pack_version(pack_dir: str) -> str | None:
     """Read version from pack.yml if present."""
     path = os.path.join(pack_dir, PACK_YML)
@@ -288,11 +469,32 @@ def run_install(
         os.makedirs(os.path.join(target, CURSOR_DIR), exist_ok=True)
 
     total_r, total_c, total_a = 0, 0, 0
+    total_hooks = 0
+    hooks_json_merged = False
     for pack_dir in pack_dirs:
         r, c, a = merge_cursor_dir(pack_dir, target, overwrite, dry_run)
         total_r += r
         total_c += c
         total_a += a
+        meta = read_pack_yml(pack_dir)
+        if meta.get("hooks_merge"):
+            total_hooks += merge_hooks_dir(pack_dir, target, overwrite, dry_run)
+            if merge_hooks_json_from_pack(pack_dir, target, dry_run):
+                hooks_json_merged = True
+            bootstrap_doctrine(pack_dir, target, dry_run)
+
+    skill_names = collect_skill_names(repo_root, pack_dirs)
+    total_skills = 0
+    for skill_name in skill_names:
+        try:
+            n, _ = copy_skill_tree(repo_root, skill_name, target, overwrite, dry_run)
+            total_skills += n
+        except FileNotFoundError as e:
+            print(f"Error: {e}", file=sys.stderr)
+            return 1
+
+    if hooks_json_merged or total_hooks:
+        sync_hub_doctrine_hook(repo_root, target, overwrite=True, dry_run=dry_run)
 
     ensure_design_log_dir(target, dry_run, refresh_readme=refresh_design_log_readme)
     copy_tools(repo_root, target, dry_run)
@@ -314,6 +516,13 @@ def run_install(
             print(f"  Added: {total_r} rules, {total_c} commands, {total_a} agents")
         else:
             print("  (No new files; target already had these. Use --overwrite to replace.)")
+        if total_skills:
+            print(f"  Skills: {total_skills} file(s) installed/updated under {CURSOR_DIR}/skills/")
+        if total_hooks or hooks_json_merged:
+            print(
+                f"  Hooks: {total_hooks} script(s); hooks.json merged={hooks_json_merged}. "
+                f"Project {CURSOR_DIR}/{DOCTRINE_DIR}/ is bootstrap-only (never overwritten on reinstall)."
+            )
         readme_note = " (README refreshed from hub)" if refresh_design_log_readme else ""
         print(
             f"  {CURSOR_DIR}/{DESIGN_LOG_DIR}/: README created if absent{readme_note}; "
@@ -321,7 +530,7 @@ def run_install(
         )
         cursor_dir = os.path.join(target, CURSOR_DIR)
         if os.path.isdir(cursor_dir):
-            for sub in (RULES, COMMANDS, AGENTS, DESIGN_LOG_DIR, TOOLS_DIR):
+            for sub in (RULES, COMMANDS, AGENTS, DESIGN_LOG_DIR, TOOLS_DIR, HOOKS, DOCTRINE_DIR, "skills"):
                 subpath = os.path.join(cursor_dir, sub)
                 if os.path.isdir(subpath):
                     n = len([f for f in os.listdir(subpath) if os.path.isfile(os.path.join(subpath, f))])

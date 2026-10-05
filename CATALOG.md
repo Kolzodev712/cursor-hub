@@ -22,6 +22,22 @@ There are **three ways** to use commands:
 
 ---
 
+## engineering-doctrine (optional — ambient engineering)
+
+**Purpose:** Short always-on **policy rule**, **engineering-doctrine** skill (decision router + reference topics), **project doctrine** bootstrap under `.cursor/doctrine/`, and **hooks** that record doctrine/skill reads and block writes to classified paths until required context was read in the session.
+
+**Install:** `cursor-hub install engineering-doctrine <target>` — **not** part of default `--lang rust all` unless you add it explicitly.
+
+**Contents:**
+
+- **Rule:** `engineering-doctrine-ambient.mdc` — classify components, consult doctrine progressively, evidence bar.
+- **Skill:** `engineering-doctrine` (installed to `.cursor/skills/`).
+- **Hooks:** merged into `.cursor/hooks.json`; scripts under `.cursor/hooks/`.
+
+See [docs/engineering-doctrine.md](docs/engineering-doctrine.md).
+
+---
+
 ## Main workflow (use in any order or on their own)
 
 Each pack has its own workflow step numbering. Use design review, implement, and/or add tests as needed — you are not forced to run all of them. **The design log is created or updated automatically** at the end of each command.

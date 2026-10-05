@@ -106,7 +106,7 @@ Checks that every pack has `pack.yml`, rules have valid frontmatter, commands fo
 ## Languages
 
 - Language profiles are built into the installer (CLI and `tools/install.py`) via the `--lang` flag.
-- **`--lang rust`** installs: design-log, documentation, security, and all Rust packs (rust-design-review, rust-implementation, rust-testing, rust-bugfix, rust-review, rust-refactor). **`rust-best-practices-skill.mdc`** requires reading **`.cursor/skills/rust-best-practices/SKILL.md`** when Rust files or `Cargo.toml`/`build.rs` drive the chat and that skill folder exists—copy [skills/rust-best-practices/](skills/rust-best-practices/) into `.cursor/skills/` (see [skills/README.md](skills/README.md)).
+- **`--lang rust`** installs: design-log, documentation, security, and all Rust packs (rust-design-review, rust-implementation, rust-testing, rust-bugfix, rust-review, rust-refactor). **`rust-implementation`** installs the **`rust-best-practices`** skill into `.cursor/skills/`; **`rust-best-practices-skill.mdc`** requires reading **`SKILL.md`** when Rust files or `Cargo.toml`/`build.rs` drive the chat.
 - **`--lang python`** installs: design-log, documentation, security, and all Python packs (python-design-review, python-implementation, python-testing, python-bugfix, python-review, python-refactor).
 - **`--lang js-ts`** installs: design-log, documentation, security, and all JS/TS packs (js-ts-design-review, js-ts-implementation, js-ts-testing, js-ts-bugfix, js-ts-review, js-ts-refactor).
 - **`--lang terraform`** installs: design-log, documentation, security, and all Terraform packs (terraform-design-review, terraform-implementation, terraform-testing, terraform-bugfix, terraform-review).
@@ -115,7 +115,8 @@ Use `cursor-hub install --lang <language> all <target_dir>` (or `python tools/in
 ## Meta / authoring
 
 - **[AGENTS.md](AGENTS.md)** — Contract for contributors and agents working on the hub: purpose, where packs/commands/rules live, present drafts for approval.
-- **Skills (Cursor):** Maintainer Rust skill lives under [skills/rust-best-practices/](skills/rust-best-practices/). Copy or symlink into a target project’s `.cursor/skills/` — not merged by the pack installer yet (see [skills/README.md](skills/README.md)).
+- **Skills (Cursor):** Hub skills under [skills/](skills/). Packs with `skills:` in `pack.yml` install into `.cursor/skills/` on merge; **`engineering-doctrine`** adds ambient policy + hooks (see [docs/engineering-doctrine.md](docs/engineering-doctrine.md)).
+- **Ambient engineering:** Install **`engineering-doctrine`** for project `.cursor/doctrine/`, the engineering-doctrine skill, and optional write gates — not included in `--lang rust all` unless you add that pack. Real-repo evaluation: [docs/experiment-engineering-doctrine.md](docs/experiment-engineering-doctrine.md).
 - **Generate-* skills:** The hub can support authoring via Cursor skills (e.g. generate-rules, generate-commands) that follow the same workflow: gather requirements → draft → present → write after approval. Skills may live in the hub repo (for maintainers) or in an optional meta pack that installs into a project’s `.cursor/skills/`. If adopted, ensure skills use the hub’s paths and naming (`.cursor/design-log/`, pack names). See [AGENTS.md](AGENTS.md) and the present-before-writing rule in `_shared`.
 
 ## License

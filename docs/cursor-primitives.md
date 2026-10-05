@@ -33,7 +33,9 @@ Use this table to choose the right primitive or to author new ones; see [authori
 
 ## Hooks
 
-Cursor may support hooks (e.g. pre/post save, pre-commit). This hub does not define hooks yet; packs are limited to rules, commands, and agents.
+**Hooks** (optional, via **engineering-doctrine** pack): `.cursor/hooks.json` and scripts under `.cursor/hooks/` can gate tool use (e.g. require project doctrine reads before writes to classified paths). See [engineering-doctrine.md](engineering-doctrine.md).
+
+**Skills:** Hub skills live under `skills/` in the repo; packs may declare `skills:` dependencies in `pack.yml` for automatic install into `.cursor/skills/`.
 
 ## Summary
 

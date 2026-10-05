@@ -111,7 +111,18 @@ def main() -> int:
             if (
                 one == "all"
                 or one in installer.LANGUAGE_PACK_SETS
-                or one.startswith(("rust-", "python-", "js-ts-", "terraform-", "design-log", "documentation", "security"))
+                or one.startswith(
+                    (
+                        "rust-",
+                        "python-",
+                        "js-ts-",
+                        "terraform-",
+                        "design-log",
+                        "documentation",
+                        "security",
+                        "engineering-doctrine",
+                    )
+                )
             ):
                 parsed.target = os.path.abspath(os.getcwd())
             else:

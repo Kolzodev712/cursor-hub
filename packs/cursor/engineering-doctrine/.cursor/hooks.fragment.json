@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "hooks": {
+    "postToolUse": [
+      {
+        "command": "python3 .cursor/hooks/doctrine_enforcement.py track-read",
+        "matcher": "Read",
+        "failClosed": false
+      }
+    ],
+    "preToolUse": [
+      {
+        "command": "python3 .cursor/hooks/doctrine_enforcement.py gate-write",
+        "matcher": "Write|StrReplace|ApplyPatch|Delete|EditNotebook|NotebookEdit",
+        "failClosed": true
+      }
+    ]
+  }
+}

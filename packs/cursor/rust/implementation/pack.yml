@@ -1,3 +1,5 @@
 name: rust-implementation
 description: Implementation pack — small diffs, Rust best practices, anti-footguns, refactor-safe workflow.
-version: "0.3.1"
+version: "0.3.2"
+skills:
+  - rust-best-practices
