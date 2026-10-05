@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-05
+
 ### Added
+
+- **Mandatory engineering-doctrine repository setup** — Installing `engineering-doctrine` runs or resumes a guided, offline wizard (repository responsibility, objectives, invariants, workload, components). Project-owned `.cursor/doctrine/setup.json` tracks setup lifecycle only. CLI: `cursor-hub doctrine setup|status|validate` (plus `--review`, `--review-unknowns`). Non-interactive installs fail with remediation when setup is required; `--dry-run` reports setup status without launching the wizard. Hooks block substantive writes when setup is `INCOMPLETE`, `INVALID`, or `STALE_SCHEMA` (unknown facts do not block). Deterministic component → decision-domain routing in `cursor_hub/doctrine/routing.py`. Tests: `tests/test_doctrine_setup.py`.
+
+### Added (continued from prior unreleased work)
 
 - **Engineering-doctrine knowledge layers** — `decision/`, `techniques/`, `platforms/`; SIMD split (cpu-execution + techniques/simd); knowledge-gap policy; removed flat `reference/` tree.
 - **Engineering-doctrine source audit** — Epistemic classes (SPEC/IMPLEMENTATION/EMPIRICAL/HEURISTIC/POLICY), [skills/engineering-doctrine/SOURCES.md](skills/engineering-doctrine/SOURCES.md), rewritten references, [docs/doctrine-source-audit.md](docs/doctrine-source-audit.md), `tools/validate_doctrine_sources.py`.

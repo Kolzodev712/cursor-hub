@@ -13,6 +13,12 @@ import os
 import sys
 
 from . import installer
+from cursor_hub.doctrine.setup import run_setup
+from cursor_hub.doctrine.setup_io import ConsoleIO
+from cursor_hub.doctrine.validate import (
+    format_validation_report,
+    validate_doctrine_setup,
+)
 
 
 def _get_hub_root() -> str | None:
@@ -22,6 +28,49 @@ def _get_hub_root() -> str | None:
         return root
     pkg_dir = os.path.dirname(os.path.abspath(__file__))
     return installer.get_hub_root(os.path.normpath(os.path.join(pkg_dir, "..")))
+
+
+def cmd_doctrine_setup(args: argparse.Namespace) -> int:
+    target = os.path.abspath(args.target)
+    return run_setup(
+        target,
+        ConsoleIO(),
+        review=args.review,
+        review_unknowns=args.review_unknowns,
+    )
+
+
+def cmd_doctrine_status(args: argparse.Namespace) -> int:
+    target = os.path.abspath(args.target)
+    result = validate_doctrine_setup(target)
+    lines = [
+        "Engineering Doctrine",
+        "",
+        f"Installed: {'yes' if os.path.isfile(os.path.join(target, '.cursor', 'rules', 'engineering-doctrine-ambient.mdc')) else 'no'}",
+        "",
+        f"Setup status:\n{result.status}",
+        "",
+        f"Schema: 1",
+        "",
+        "Sections:",
+    ]
+    for name, st in result.sections.items():
+        mark = "✓" if st == "complete" else "✗"
+        lines.append(f"{mark} {name}")
+    lines.append(f"\nUnknown facts:\n{result.unknown_count}")
+    if result.ok_for_install and result.unknown_count:
+        lines.append("\nSuggested next command:\ncursor-hub doctrine setup --review-unknowns .")
+    elif not result.ok_for_install:
+        lines.append("\nSuggested next command:\ncursor-hub doctrine setup .")
+    print("\n".join(lines))
+    return 0
+
+
+def cmd_doctrine_validate(args: argparse.Namespace) -> int:
+    target = os.path.abspath(args.target)
+    result = validate_doctrine_setup(target)
+    print(format_validation_report(target, result))
+    return result.exit_code
 
 
 def cmd_install(args: argparse.Namespace) -> int:
@@ -94,6 +143,45 @@ def main() -> int:
         "With --lang, positional 'all' is optional. If target is omitted, last arg is used as target.",
     )
     install_parser.set_defaults(func=cmd_install)
+
+    doctrine_parser = subparsers.add_parser(
+        "doctrine",
+        help="Engineering doctrine repository setup and validation",
+    )
+    doctrine_sub = doctrine_parser.add_subparsers(dest="doctrine_cmd", required=True)
+
+    def _doctrine_target(p: argparse.ArgumentParser) -> None:
+        p.add_argument(
+            "target",
+            nargs="?",
+            default=".",
+            help="Project directory (default: current directory)",
+        )
+
+    setup_p = doctrine_sub.add_parser(
+        "setup",
+        help="Run or resume guided repository doctrine setup",
+    )
+    _doctrine_target(setup_p)
+    setup_p.add_argument(
+        "--review",
+        action="store_true",
+        help="Review or edit existing setup section-by-section",
+    )
+    setup_p.add_argument(
+        "--review-unknowns",
+        action="store_true",
+        help="Review fields explicitly marked UNKNOWN",
+    )
+    setup_p.set_defaults(func=cmd_doctrine_setup)
+
+    status_p = doctrine_sub.add_parser("status", help="Show doctrine setup status (read-only)")
+    _doctrine_target(status_p)
+    status_p.set_defaults(func=cmd_doctrine_status)
+
+    validate_p = doctrine_sub.add_parser("validate", help="Validate doctrine setup files")
+    _doctrine_target(validate_p)
+    validate_p.set_defaults(func=cmd_doctrine_validate)
 
     parsed = parser.parse_args()
 

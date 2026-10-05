@@ -17,6 +17,12 @@ if _REPO_ROOT not in sys.path:
 from cursor_hub import installer
 from cursor_hub.doctrine_enforcement import handle_gate_write, handle_track_read, load_state
 from cursor_hub.hooks_merge import merge_hooks_json
+from tests.test_doctrine_setup import complete_minimal_setup
+from unittest import mock
+
+
+def _scripted_doctrine_setup(target, io, **kwargs):
+    return complete_minimal_setup(target)
 
 
 class InstallerDoctrineTests(unittest.TestCase):
@@ -27,16 +33,21 @@ class InstallerDoctrineTests(unittest.TestCase):
     def tearDown(self) -> None:
         shutil.rmtree(self._tmp, ignore_errors=True)
 
-    def _install(self, *, overwrite: bool = False, twice: bool = False) -> None:
-        rc = installer.run_install(
-            _REPO_ROOT,
-            self.target,
-            ["engineering-doctrine"],
-            overwrite=overwrite,
-            dry_run=False,
-        )
-        self.assertEqual(rc, 0)
-        if twice:
+    def _install(self, *, overwrite: bool = False, twice: bool = False, complete_setup: bool = True) -> None:
+        patches = [
+            mock.patch("sys.stdin.isatty", return_value=True),
+            mock.patch("sys.stdout.isatty", return_value=True),
+        ]
+        if complete_setup:
+            patches.append(
+                mock.patch(
+                    "cursor_hub.doctrine.install_integration.run_setup",
+                    side_effect=_scripted_doctrine_setup,
+                )
+            )
+        for p in patches:
+            p.start()
+        try:
             rc = installer.run_install(
                 _REPO_ROOT,
                 self.target,
@@ -44,6 +55,21 @@ class InstallerDoctrineTests(unittest.TestCase):
                 overwrite=overwrite,
                 dry_run=False,
             )
+            self.assertEqual(rc, 0 if complete_setup else rc)
+        finally:
+            for p in reversed(patches):
+                p.stop()
+        if twice:
+            with mock.patch("sys.stdin.isatty", return_value=True), mock.patch(
+                "sys.stdout.isatty", return_value=True
+            ):
+                rc = installer.run_install(
+                    _REPO_ROOT,
+                    self.target,
+                    ["engineering-doctrine"],
+                    overwrite=overwrite,
+                    dry_run=False,
+                )
             self.assertEqual(rc, 0)
 
     def test_fresh_install_layout(self) -> None:
@@ -63,7 +89,17 @@ class InstallerDoctrineTests(unittest.TestCase):
         custom = os.path.join(doctrine, "objectives.md")
         with open(custom, "w", encoding="utf-8") as f:
             f.write("CUSTOM_OBJECTIVES\n")
-        self._install(overwrite=True)
+        with mock.patch("sys.stdin.isatty", return_value=False), mock.patch(
+            "sys.stdout.isatty", return_value=False
+        ):
+            rc = installer.run_install(
+                _REPO_ROOT,
+                self.target,
+                ["engineering-doctrine"],
+                overwrite=True,
+                dry_run=False,
+            )
+        self.assertEqual(rc, 1)
         with open(custom, encoding="utf-8") as f:
             self.assertEqual(f.read(), "CUSTOM_OBJECTIVES\n")
 

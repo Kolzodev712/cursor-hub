@@ -355,21 +355,24 @@ def bootstrap_doctrine(pack_dir: str, target: str, dry_run: bool) -> int:
 
 
 def sync_hub_doctrine_hook(repo_root: str, target: str, overwrite: bool, dry_run: bool) -> None:
-    """Refresh hub-owned doctrine_enforcement.py when engineering-doctrine hooks are installed."""
-    src = os.path.join(repo_root, "cursor_hub", "doctrine_enforcement.py")
-    dst = os.path.join(target, CURSOR_DIR, HOOKS, "doctrine_enforcement.py")
-    if not os.path.isfile(src):
-        return
-    if dry_run:
-        print(f"[dry-run] would sync {os.path.join(CURSOR_DIR, HOOKS, 'doctrine_enforcement.py')} from hub")
-        return
-    if overwrite or not os.path.exists(dst):
-        os.makedirs(os.path.dirname(dst), exist_ok=True)
-        shutil.copy2(src, dst)
-        try:
-            os.chmod(dst, os.stat(dst).st_mode | 0o111)
-        except OSError:
-            pass
+    """Refresh hub-owned doctrine hook scripts when engineering-doctrine hooks are installed."""
+    hook_files = ("doctrine_enforcement.py", "doctrine_setup_gate.py")
+    for name in hook_files:
+        src = os.path.join(repo_root, "cursor_hub", name)
+        dst = os.path.join(target, CURSOR_DIR, HOOKS, name)
+        if not os.path.isfile(src):
+            continue
+        if dry_run:
+            print(f"[dry-run] would sync {os.path.join(CURSOR_DIR, HOOKS, name)} from hub")
+            continue
+        if overwrite or not os.path.exists(dst):
+            os.makedirs(os.path.dirname(dst), exist_ok=True)
+            shutil.copy2(src, dst)
+            if name.endswith(".py"):
+                try:
+                    os.chmod(dst, os.stat(dst).st_mode | 0o111)
+                except OSError:
+                    pass
 
 
 def read_pack_version(pack_dir: str) -> str | None:
@@ -535,7 +538,10 @@ def run_install(
                 if os.path.isdir(subpath):
                     n = len([f for f in os.listdir(subpath) if os.path.isfile(os.path.join(subpath, f))])
                     print(f"  -> {os.path.join(target, CURSOR_DIR, sub)} ({n} files)")
-    return 0
+
+    from cursor_hub.doctrine.install_integration import post_install_doctrine_setup
+
+    return post_install_doctrine_setup(target, pack_names, dry_run=dry_run)
 
 
 def expand_pack_names(

@@ -19,6 +19,8 @@ This file is the single contract for contributors and agents working on the **cu
 
 Knowledge layout: **`decision/`** (routing) → **`techniques/`** (optional) → **`platforms/`** (conditional) — see [docs/engineering-doctrine.md](docs/engineering-doctrine.md).
 
+When adding a **new required project-doctrine fact** (template field, hook requirement, or setup section), also update the **doctrine setup wizard** (`cursor_hub/doctrine/`), validation, `setup.json` schema/migration notes, and docs — do not ship template-only requirements without setup support.
+
 When changing `skills/engineering-doctrine/`:
 
 - Do **not** add normative/implementation claims from model memory alone — register sources in [SOURCES.md](skills/engineering-doctrine/SOURCES.md) and tag claim class in decision/technique files.

@@ -70,12 +70,27 @@ The installer:
 - **Merges** `hooks.json` (dedupes hub entries; preserves user hooks)
 - Installs the **engineering-doctrine** skill under `.cursor/skills/`
 - **Bootstraps** missing files under `.cursor/doctrine/` only (never overwrites project content, including with `--overwrite`)
+- On an **interactive** terminal, runs **guided repository setup** when project doctrine is not yet valid (resume anytime with `cursor-hub doctrine setup .`)
+
+Non-interactive install (CI, pipes) **fails** if setup is still required — no guessed defaults. Use `cursor-hub doctrine status .` and `cursor-hub doctrine validate .` to inspect setup.
+
+```bash
+cursor-hub doctrine setup .              # run or resume wizard
+cursor-hub doctrine setup --review .     # section-by-section review
+cursor-hub doctrine setup --review-unknowns .
+cursor-hub doctrine status .
+cursor-hub doctrine validate .
+```
+
+Project-owned **setup lifecycle** lives in `.cursor/doctrine/setup.json` (schema version, section progress, status). Engineering facts stay in `objectives.md`, `invariants.md`, `workload.md`, `architecture.md`, and `components.json`.
 
 Pack-declared **skill dependencies** (e.g. `rust-implementation` → `rust-best-practices`) are copied recursively when those packs are installed.
 
 ## Component classification
 
-Edit `.cursor/doctrine/components.json`:
+The setup wizard generates `.cursor/doctrine/components.json` from component interviews and **deterministic** decision-domain routing (`cursor_hub/doctrine/routing.py`). You should not need to hand-edit paths or `required_doctrine_refs` for normal onboarding.
+
+Example shape (for maintainers):
 
 ```json
 {
@@ -102,6 +117,7 @@ Empty `components` disables write gates (policy rules still apply).
 
 When Cursor runs project hooks:
 
+- **preToolUse (Write family):** If repository setup is `INCOMPLETE`, `INVALID`, or `STALE_SCHEMA`, denies substantive writes until `cursor-hub doctrine setup .` completes successfully. `COMPLETE_WITH_UNKNOWNS` is allowed — unknown facts must not be invented by agents.
 - **postToolUse (Read):** After a successful Read, records a **SHA-256 fingerprint** of each path under `.cursor/doctrine/` or `.cursor/skills/` for the session.
 - **preToolUse (Write family):** Denies writes to classified paths until required files were read **at their current fingerprint** in that session.
 

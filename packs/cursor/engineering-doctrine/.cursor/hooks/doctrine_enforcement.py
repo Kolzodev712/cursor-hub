@@ -336,6 +336,17 @@ def handle_track_read(payload: dict[str, Any], project_root: str) -> dict[str, A
     return {"permission": "allow"}
 
 
+def _load_setup_gate():
+    hook_dir = os.path.dirname(os.path.abspath(__file__))
+    if hook_dir not in sys.path:
+        sys.path.insert(0, hook_dir)
+    try:
+        import doctrine_setup_gate as gate  # type: ignore[import-not-found]
+    except ImportError:
+        from cursor_hub import doctrine_setup_gate as gate  # type: ignore[no-redef]
+    return gate
+
+
 def handle_gate_write(payload: dict[str, Any], project_root: str) -> dict[str, Any]:
     tool = tool_name_from_payload(payload)
     if tool not in WRITE_TOOLS:
@@ -346,6 +357,15 @@ def handle_gate_write(payload: dict[str, Any], project_root: str) -> dict[str, A
         return {"permission": "allow"}
     ws = workspace_root_from_payload(payload) or project_root
     rel = norm_rel_path(fpath, ws)
+
+    gate = _load_setup_gate()
+    blocks, _status, user_msg = gate.setup_blocks_writes(project_root)
+    if blocks:
+        return {
+            "permission": "deny",
+            "agent_message": user_msg,
+            "user_message": "Engineering doctrine setup must be completed before classified edits.",
+        }
 
     components, cfg_err = load_components(project_root)
     if cfg_err and os.path.isfile(components_file_path(project_root)):
