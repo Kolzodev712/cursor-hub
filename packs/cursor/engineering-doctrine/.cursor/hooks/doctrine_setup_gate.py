@@ -8,7 +8,7 @@ import os
 import re
 from typing import Any
 
-DOCTRINE_SETUP_SCHEMA_VERSION = 1
+DOCTRINE_SETUP_SCHEMA_VERSION = 2
 SETUP_REL = os.path.join(".cursor", "doctrine", "setup.json")
 AMBIENT_RULE = os.path.join(".cursor", "rules", "engineering-doctrine-ambient.mdc")
 
@@ -157,13 +157,26 @@ def compute_setup_status(project_root: str) -> tuple[str, dict[str, Any]]:
                 f"setup schema {sv!r} != required {DOCTRINE_SETUP_SCHEMA_VERSION}"
             )
             return "STALE_SCHEMA", detail
+        if not meta.get("approved_at") and not meta.get("awaiting_final_approval"):
+            # Structurally complete files without explicit schema v2 approval.
+            pass
+
+    def _section_components(root: str) -> tuple[bool, list[str]]:
+        ok, issues = _validate_components(root)
+        if not ok:
+            return False, issues
+        if not meta:
+            return False, ["components interview not completed (run doctrine setup)"]
+        if (meta.get("sections") or {}).get("components") != "complete":
+            return False, ["components interview not completed in setup wizard"]
+        return True, []
 
     checks = {
         "repository": _section_repository,
         "objectives": _section_objectives,
         "invariants": _section_invariants,
         "workload": _section_workload,
-        "components": lambda r: _validate_components(r),
+        "components": _section_components,
     }
     all_ok = True
     for name, fn in checks.items():
@@ -179,6 +192,9 @@ def compute_setup_status(project_root: str) -> tuple[str, dict[str, Any]]:
         return "INCOMPLETE", detail
     if detail["issues"]:
         return "INVALID", detail
+    if meta and not meta.get("approved_at"):
+        detail["issues"].append("setup not approved — confirm summary with W in doctrine setup")
+        return "INCOMPLETE", detail
     if detail["unknown_count"] > 0:
         return "COMPLETE_WITH_UNKNOWNS", detail
     return "COMPLETE", detail

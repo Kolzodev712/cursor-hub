@@ -9,7 +9,12 @@ import os
 import shutil
 import sys
 
-from cursor_hub.hooks_merge import load_hooks_json, merge_hooks_json, write_hooks_json
+from cursor_hub.hooks_merge import (
+    load_hooks_json,
+    merge_hooks_json,
+    parse_hooks_json_file,
+    write_hooks_json,
+)
 from cursor_hub.pack_yml import read_pack_yml
 
 PACKS_ROOT = "packs"
@@ -239,26 +244,28 @@ def merge_hooks_json_from_pack(
     pack_dir: str,
     target: str,
     dry_run: bool,
-) -> bool:
-    """Merge hooks.fragment.json or hooks.json from pack into target hooks.json."""
+) -> tuple[bool, str | None]:
+    """Merge hooks fragment into target hooks.json. Returns (merged, error)."""
     cursor = os.path.join(pack_dir, CURSOR_DIR)
     fragment_path = os.path.join(cursor, HOOKS_FRAGMENT)
     if not os.path.isfile(fragment_path):
         fragment_path = os.path.join(cursor, HOOKS_JSON)
     if not os.path.isfile(fragment_path):
-        return False
+        return False, None
     try:
         with open(fragment_path, "r", encoding="utf-8") as f:
             fragment = json.load(f)
-    except (OSError, json.JSONDecodeError):
-        return False
+    except (OSError, json.JSONDecodeError) as e:
+        return False, f"Pack hooks fragment invalid: {e}"
     if not isinstance(fragment, dict):
-        return False
+        return False, "Pack hooks fragment must be a JSON object"
     dst = os.path.join(target, CURSOR_DIR, HOOKS_JSON)
-    existing = load_hooks_json(dst)
+    existing, hooks_err = parse_hooks_json_file(dst)
+    if hooks_err:
+        return False, hooks_err
     merged = merge_hooks_json(existing, fragment)
     write_hooks_json(dst, merged, dry_run)
-    return True
+    return True, None
 
 
 def copy_skill_tree(
@@ -482,7 +489,15 @@ def run_install(
         meta = read_pack_yml(pack_dir)
         if meta.get("hooks_merge"):
             total_hooks += merge_hooks_dir(pack_dir, target, overwrite, dry_run)
-            if merge_hooks_json_from_pack(pack_dir, target, dry_run):
+            merged_ok, hooks_merge_err = merge_hooks_json_from_pack(pack_dir, target, dry_run)
+            if hooks_merge_err:
+                print(f"ERROR: {hooks_merge_err}", file=sys.stderr)
+                print(
+                    "Fix or rename the existing hooks.json before reinstalling engineering-doctrine.",
+                    file=sys.stderr,
+                )
+                return 1
+            if merged_ok:
                 hooks_json_merged = True
             bootstrap_doctrine(pack_dir, target, dry_run)
 

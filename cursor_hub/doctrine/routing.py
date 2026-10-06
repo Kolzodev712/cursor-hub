@@ -48,9 +48,9 @@ def domains_for_component(comp: ComponentProfile) -> list[str]:
         domains.add("memory")
     if _yes(comp.alloc_sensitive):
         domains.add("allocation")
-    if _yes(comp.concurrent_access) or _yes(comp.mutable_state):
+    if _yes(comp.concurrent_access):
         domains.add("concurrency")
-    if _yes(comp.explicit_sync):
+    if _yes(comp.atomics_usage):
         domains.add("atomics")
     if _yes(comp.numeric_compute):
         domains.add("cpu-execution")
@@ -64,8 +64,32 @@ def domains_for_component(comp: ComponentProfile) -> list[str]:
     return [d for d in ORDER if d in domains]
 
 
-def doctrine_refs_for_component(comp: ComponentProfile) -> list[str]:
+def suggested_doctrine_refs_for_component(comp: ComponentProfile) -> list[str]:
     return [DECISION_FILES[d] for d in domains_for_component(comp)]
+
+
+def doctrine_refs_for_component(comp: ComponentProfile) -> list[str]:
+    suggested = suggested_doctrine_refs_for_component(comp)
+    extra = [str(x).replace("\\", "/") for x in comp.extra_required_doctrine_refs]
+    out: list[str] = []
+    seen: set[str] = set()
+    for ref in suggested + extra:
+        if ref not in seen:
+            seen.add(ref)
+            out.append(ref)
+    return out
+
+
+def required_project_files_for_component(comp: ComponentProfile) -> list[str]:
+    base = default_project_context()
+    extra = [str(x).replace("\\", "/") for x in comp.extra_required_project_files]
+    out: list[str] = []
+    seen: set[str] = set()
+    for p in base + extra:
+        if p not in seen:
+            seen.add(p)
+            out.append(p)
+    return out
 
 
 def default_project_context() -> list[str]:

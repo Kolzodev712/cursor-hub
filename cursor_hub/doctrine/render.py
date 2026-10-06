@@ -11,7 +11,27 @@ from cursor_hub.doctrine.model import (
     SetupAnswers,
     ComponentProfile,
 )
-from cursor_hub.doctrine.routing import default_project_context, doctrine_refs_for_component
+from cursor_hub.doctrine.routing import (
+    doctrine_refs_for_component,
+    required_project_files_for_component,
+    suggested_doctrine_refs_for_component,
+)
+
+TRAIT_KEYS = (
+    "correctness_critical",
+    "latency_sensitive",
+    "throughput_sensitive",
+    "mutable_state",
+    "concurrent_access",
+    "explicit_sync",
+    "atomics_usage",
+    "alloc_sensitive",
+    "numeric_compute",
+    "external_data",
+    "persistent_storage",
+    "specialized_runtime",
+    "representation_sensitive",
+)
 
 MARKER_REPO = "<!-- doctrine-setup:repository -->"
 MARKER_OBJECTIVES = "<!-- doctrine-setup:objectives -->"
@@ -96,17 +116,26 @@ def _fmt_perf_importance(val: str) -> str:
     return f"Performance materially important: {UNKNOWN}"
 
 
+def _component_item(comp: ComponentProfile) -> dict[str, Any]:
+    traits = {k: getattr(comp, k) for k in TRAIT_KEYS}
+    suggested = suggested_doctrine_refs_for_component(comp)
+    return {
+        "id": comp.id,
+        "patterns": comp.patterns,
+        "required_project_files": required_project_files_for_component(comp),
+        "required_doctrine_refs": doctrine_refs_for_component(comp),
+        "interview": {
+            "responsibility": comp.responsibility,
+            "traits": traits,
+            "extra_required_project_files": list(comp.extra_required_project_files),
+            "extra_required_doctrine_refs": list(comp.extra_required_doctrine_refs),
+            "suggested_doctrine_refs": suggested,
+        },
+    }
+
+
 def render_components_json(answers: SetupAnswers) -> str:
-    items: list[dict[str, Any]] = []
-    for comp in answers.components:
-        items.append(
-            {
-                "id": comp.id,
-                "patterns": comp.patterns,
-                "required_project_files": default_project_context(),
-                "required_doctrine_refs": doctrine_refs_for_component(comp),
-            }
-        )
+    items = [_component_item(c) for c in answers.components]
     return json.dumps({"components": items}, indent=2) + "\n"
 
 
@@ -209,17 +238,51 @@ def parse_components_json(text: str) -> list[ComponentProfile]:
     raw = json.loads(text)
     out: list[ComponentProfile] = []
     for item in raw.get("components") or []:
-        out.append(
-            ComponentProfile(
-                id=str(item.get("id", "component")),
-                patterns=[str(p) for p in item.get("patterns") or []],
-            )
+        interview = item.get("interview") if isinstance(item.get("interview"), dict) else {}
+        traits = interview.get("traits") if isinstance(interview.get("traits"), dict) else {}
+        comp = ComponentProfile(
+            id=str(item.get("id", "component")),
+            patterns=[str(p) for p in item.get("patterns") or []],
+            responsibility=str(interview.get("responsibility") or ""),
+            extra_required_project_files=[
+                str(x) for x in interview.get("extra_required_project_files") or []
+            ],
+            extra_required_doctrine_refs=[
+                str(x) for x in interview.get("extra_required_doctrine_refs") or []
+            ],
         )
+        for k in TRAIT_KEYS:
+            if k in traits:
+                setattr(comp, k, str(traits[k]))
+        if comp.atomics_usage == UNKNOWN and comp.explicit_sync not in (UNKNOWN, NOT_APPLICABLE, ""):
+            # Legacy files without atomics_usage
+            comp.atomics_usage = comp.explicit_sync
+        out.append(comp)
     return out
 
 
-def load_answers_from_project(paths: dict[str, str]) -> SetupAnswers:
+def load_answers_from_project(paths: dict[str, str], *, project_root: str | None = None) -> SetupAnswers:
     import os
+
+    if project_root:
+        from cursor_hub.doctrine.staging import load_staging
+
+        setup_path = paths.get("setup") or os.path.join(project_root, ".cursor", "doctrine", "setup.json")
+        use_staging = True
+        if os.path.isfile(setup_path):
+            try:
+                with open(setup_path, encoding="utf-8") as f:
+                    meta = json.load(f)
+                if isinstance(meta, dict) and meta.get("approved_at") and not meta.get(
+                    "awaiting_final_approval"
+                ):
+                    use_staging = False
+            except (OSError, json.JSONDecodeError):
+                pass
+        if use_staging:
+            staged = load_staging(project_root)
+            if staged is not None:
+                return staged
 
     ans = SetupAnswers()
     if os.path.isfile(paths["architecture"]):

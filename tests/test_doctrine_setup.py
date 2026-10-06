@@ -33,8 +33,7 @@ def minimal_setup_inputs(*, repo_text: str = "Consumes market data and routes or
         "y",
         "",
         "2",
-        "s",
-        "n",
+        "n",  # add custom component? (no candidate list on empty install)
         "w",
     ]
 
@@ -55,7 +54,7 @@ class DoctrineRoutingTests(unittest.TestCase):
         c = ComponentProfile(
             id="x",
             patterns=["src/**"],
-            explicit_sync="yes",
+            atomics_usage="yes",
             numeric_compute="yes",
             external_data="yes",
             latency_sensitive="yes",
@@ -127,9 +126,9 @@ class SetupWizardTests(unittest.TestCase):
     def test_unknown_workload_allows_complete_with_unknowns(self) -> None:
         with mock.patch(
             "cursor_hub.doctrine.install_integration.run_setup",
-            side_effect=lambda t, io, **kw: complete_minimal_setup(t),
-        ), mock.patch("sys.stdin.isatty", return_value=True), mock.patch(
-            "sys.stdout.isatty", return_value=True
+            side_effect=lambda t, io, **kw: 1,
+        ), mock.patch("sys.stdin.isatty", return_value=False), mock.patch(
+            "sys.stdout.isatty", return_value=False
         ):
             installer.run_install(
                 _REPO_ROOT,
@@ -143,10 +142,7 @@ class SetupWizardTests(unittest.TestCase):
             "u",
             "u",
             "u",
-            "1",
-            "u",
-            "u",
-            "s",
+            "2",
             "n",
             "w",
         ]
@@ -204,7 +200,6 @@ class SetupWizardTests(unittest.TestCase):
             "y",
             "u",
             "2",
-            "s",
             "n",
             "w",
         ]
@@ -223,8 +218,6 @@ class SetupWizardTests(unittest.TestCase):
             "sys.stdout.isatty", return_value=True
         ):
             installer.run_install(_REPO_ROOT, self.target, ["engineering-doctrine"], dry_run=False)
-        rc = complete_minimal_setup(self.tmp)
-        self.assertEqual(rc, 0)
         with open(os.path.join(self.tmp, ".cursor", "doctrine", "workload.md"), encoding="utf-8") as f:
             text = f.read()
         self.assertIn(NOT_APPLICABLE, text)

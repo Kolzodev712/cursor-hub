@@ -14,6 +14,12 @@
         "matcher": "Write|StrReplace|ApplyPatch|Delete|EditNotebook|NotebookEdit",
         "failClosed": true
       }
+    ],
+    "preCompact": [
+      {
+        "command": "python3 .cursor/hooks/doctrine_enforcement.py pre-compact",
+        "failClosed": false
+      }
     ]
   }
 }

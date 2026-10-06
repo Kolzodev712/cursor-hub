@@ -11,6 +11,7 @@ import fnmatch
 import hashlib
 import json
 import os
+import re
 import sys
 from dataclasses import dataclass
 from typing import Any
@@ -19,7 +20,10 @@ from typing import Any
 DOCTRINE_DIR = os.path.join(".cursor", "doctrine")
 COMPONENTS_FILE = os.path.join(DOCTRINE_DIR, "components.json")
 STATE_FILE = os.path.join(".cursor", "hooks", ".doctrine-gate-state.json")
-STATE_VERSION = 2
+STATE_VERSION = 3
+
+MANDATORY_CREDITS = frozenset({"full_text", "hook_supplied"})
+HOOK_SUPPLIED_MAX_BYTES = 512_000
 
 WRITE_TOOLS = frozenset(
     {"Write", "StrReplace", "ApplyPatch", "Delete", "EditNotebook", "NotebookEdit"}
@@ -204,34 +208,54 @@ def file_fingerprint(project_root: str, rel_path: str) -> str | None:
         return None
 
 
-def mark_read(state: dict[str, Any], session: str, rel_path: str, project_root: str) -> None:
+def mark_read(
+    state: dict[str, Any],
+    session: str,
+    rel_path: str,
+    project_root: str,
+    *,
+    content_sha256: str | None = None,
+    credit: str = "path",
+) -> None:
     sessions = state.setdefault("sessions", {})
     sess = sessions.setdefault(session, {"reads": {}})
     reads = sess.setdefault("reads", {})
     key = _canonical_path(rel_path)
     fp = file_fingerprint(project_root, key)
     if fp is None:
-        reads[key] = {"sha256": None, "missing": True}
+        reads[key] = {"sha256": None, "missing": True, "credit": credit}
     else:
-        reads[key] = {"sha256": fp}
+        entry: dict[str, Any] = {"sha256": fp, "credit": credit}
+        if content_sha256:
+            entry["content_sha256"] = content_sha256
+        reads[key] = entry
 
 
-def _read_entry_valid(
+def _mandatory_context_satisfied(
     entry: Any,
     project_root: str,
     req_path: str,
 ) -> bool:
+    """Mandatory reads require verified full content or hook-supplied full file version."""
     if entry is True:
         return False
     if not isinstance(entry, dict):
         return False
     if entry.get("missing"):
-        return file_fingerprint(project_root, req_path) is None
+        return False
+    credit = str(entry.get("credit") or "")
+    if credit not in MANDATORY_CREDITS:
+        return False
     stored = entry.get("sha256")
     if not stored or not isinstance(stored, str):
         return False
     current = file_fingerprint(project_root, req_path)
-    return current is not None and stored == current
+    if current is None or stored != current:
+        return False
+    content_sha = entry.get("content_sha256")
+    if not content_sha or not isinstance(content_sha, str):
+        return False
+    return content_sha == current
 
 
 def has_read(state: dict[str, Any], session: str, rel_path: str, project_root: str) -> bool:
@@ -244,7 +268,7 @@ def has_read(state: dict[str, Any], session: str, rel_path: str, project_root: s
         entry = reads.get(key.lstrip("./"))
     if entry is None:
         return False
-    return _read_entry_valid(entry, project_root, key)
+    return _mandatory_context_satisfied(entry, project_root, key)
 
 
 def workspace_root_from_payload(payload: dict[str, Any]) -> str | None:
@@ -282,6 +306,72 @@ def file_path_from_tool_input(tool_input: dict[str, Any]) -> str | None:
         if isinstance(val, str) and val.strip():
             return val.strip()
     return None
+
+
+def extract_write_paths(tool: str, tool_input: dict[str, Any]) -> tuple[list[str], str | None]:
+    """Return project-relative paths affected by a mutation tool, or ( [], error )."""
+    if tool in ("Write", "StrReplace", "Delete", "EditNotebook", "NotebookEdit"):
+        p = file_path_from_tool_input(tool_input)
+        if not p:
+            return [], f"{tool}: missing path in tool_input"
+        return [p], None
+    if tool == "ApplyPatch":
+        p = file_path_from_tool_input(tool_input)
+        if p:
+            return [p], None
+        patch = tool_input.get("patch") or tool_input.get("patchText") or tool_input.get("text")
+        if isinstance(patch, str) and patch.strip():
+            paths: list[str] = []
+            for m in re.finditer(r"^\*\*\* (?:Update|Add|Delete) File: (.+)$", patch, re.MULTILINE):
+                paths.append(m.group(1).strip())
+            for m in re.finditer(r"^\+\+\+ [ab]/(.+)$", patch, re.MULTILINE):
+                paths.append(m.group(1).strip())
+            if paths:
+                deduped = list(dict.fromkeys(paths))
+                return deduped, None
+        files = tool_input.get("files")
+        if isinstance(files, list):
+            out = [str(x) for x in files if isinstance(x, str) and x.strip()]
+            if out:
+                return out, None
+        return [], "ApplyPatch: cannot determine affected file paths"
+    return [], f"Unsupported mutation tool for path extraction: {tool}"
+
+
+def read_result_text_from_payload(payload: dict[str, Any]) -> str | None:
+    for key in ("tool_output", "toolOutput", "output", "result"):
+        val = payload.get(key)
+        if isinstance(val, dict):
+            for inner in ("content", "text", "stdout", "output"):
+                t = val.get(inner)
+                if isinstance(t, str) and t.strip():
+                    return t
+        elif isinstance(val, str) and val.strip():
+            return val
+    return None
+
+
+def _path_escape_blocked(project_root: str, rel: str) -> bool:
+    root = os.path.abspath(project_root)
+    rel = rel.replace("\\", "/").lstrip("./")
+    if rel.startswith("../") or "/../" in f"/{rel}/":
+        return True
+    abs_path = os.path.normpath(os.path.join(root, rel))
+    try:
+        common = os.path.commonpath([root, abs_path])
+    except ValueError:
+        return True
+    return common != root
+
+
+def handle_pre_compact(payload: dict[str, Any], project_root: str) -> dict[str, Any]:
+    state = load_state(project_root)
+    session = session_key_from_payload(payload, project_root)
+    sessions = state.get("sessions", {})
+    if session in sessions:
+        sessions[session]["reads"] = {}
+        save_state(project_root, state)
+    return {"permission": "allow"}
 
 
 def missing_requirements(
@@ -331,9 +421,49 @@ def handle_track_read(payload: dict[str, Any], project_root: str) -> dict[str, A
         return {"permission": "allow"}
     state = load_state(project_root)
     session = session_key_from_payload(payload, project_root)
-    mark_read(state, session, rel, project_root)
+    body = read_result_text_from_payload(payload)
+    file_fp = file_fingerprint(project_root, rel)
+    content_hash = hashlib.sha256(body.encode("utf-8")).hexdigest() if body else None
+    if body and file_fp and content_hash == file_fp:
+        credit = "full_text"
+    elif body:
+        credit = "partial_text"
+    else:
+        credit = "path_only"
+    mark_read(
+        state,
+        session,
+        rel,
+        project_root,
+        content_sha256=content_hash if credit == "full_text" else None,
+        credit=credit,
+    )
+    out: dict[str, Any] = {"permission": "allow"}
+    if credit == "path_only" and file_fp:
+        abs_path = os.path.join(project_root, rel.replace("/", os.sep))
+        try:
+            with open(abs_path, "rb") as f:
+                raw = f.read(HOOK_SUPPLIED_MAX_BYTES + 1)
+            if len(raw) <= HOOK_SUPPLIED_MAX_BYTES:
+                full_text = raw.decode("utf-8", errors="replace")
+                supplied_hash = hashlib.sha256(raw).hexdigest()
+                if supplied_hash == file_fp:
+                    mark_read(
+                        state,
+                        session,
+                        rel,
+                        project_root,
+                        content_sha256=supplied_hash,
+                        credit="hook_supplied",
+                    )
+                    out["additional_context"] = (
+                        "Doctrine gate: mandatory context for "
+                        f"`{rel}` (credit=hook_supplied):\n\n{full_text}"
+                    )
+        except OSError:
+            pass
     save_state(project_root, state)
-    return {"permission": "allow"}
+    return out
 
 
 def _load_setup_gate():
@@ -352,11 +482,24 @@ def handle_gate_write(payload: dict[str, Any], project_root: str) -> dict[str, A
     if tool not in WRITE_TOOLS:
         return {"permission": "allow"}
     tool_input = tool_input_from_payload(payload)
-    fpath = file_path_from_tool_input(tool_input)
-    if not fpath:
+    paths, path_err = extract_write_paths(tool, tool_input)
+    if path_err:
+        return {
+            "permission": "deny",
+            "agent_message": f"Doctrine gate cannot classify this edit safely: {path_err}",
+            "user_message": "Doctrine gate: unrecognized mutation payload.",
+        }
+    if not paths:
         return {"permission": "allow"}
     ws = workspace_root_from_payload(payload) or project_root
-    rel = norm_rel_path(fpath, ws)
+    rel_paths = [norm_rel_path(p, ws) for p in paths]
+    for rel in rel_paths:
+        if _path_escape_blocked(project_root, rel):
+            return {
+                "permission": "deny",
+                "agent_message": f"Blocked path outside workspace: {rel}",
+                "user_message": "Doctrine gate: path traversal blocked.",
+            }
 
     gate = _load_setup_gate()
     blocks, _status, user_msg = gate.setup_blocks_writes(project_root)
@@ -374,19 +517,28 @@ def handle_gate_write(payload: dict[str, Any], project_root: str) -> dict[str, A
     if not components:
         return {"permission": "allow"}
 
-    matched = match_components(rel, components)
-    if not matched:
+    matched_all: list[Component] = []
+    for rel in rel_paths:
+        matched_all.extend(match_components(rel, components))
+    if not matched_all:
         return {"permission": "allow"}
 
     state = load_state(project_root)
     session = session_key_from_payload(payload, project_root)
-    missing = missing_requirements(state, session, matched, project_root)
+    seen_ids: set[str] = set()
+    matched_unique: list[Component] = []
+    for c in matched_all:
+        if c.id not in seen_ids:
+            seen_ids.add(c.id)
+            matched_unique.append(c)
+    missing = missing_requirements(state, session, matched_unique, project_root)
     if missing:
-        comp_ids = ", ".join(sorted({c.id for c in matched}))
+        comp_ids = ", ".join(sorted({c.id for c in matched_unique}))
+        targets = ", ".join(rel_paths)
         lines = "\n".join(f"  - {m}" for m in missing)
         msg = (
             f"Write blocked for classified component(s) [{comp_ids}]. "
-            f"Read the **current** contents of these paths with the Read tool before editing `{rel}`:\n{lines}\n"
+            f"Read the **current** contents of these paths with the Read tool before editing ({targets}):\n{lines}\n"
             "Also load the engineering-doctrine skill when doctrine references are listed."
         )
         return {
@@ -418,6 +570,8 @@ def main(argv: list[str] | None = None) -> int:
         out = handle_track_read(payload, project_root)
     elif mode == "gate-write":
         out = handle_gate_write(payload, project_root)
+    elif mode == "pre-compact":
+        out = handle_pre_compact(payload, project_root)
     else:
         out = {"permission": "allow"}
     print(json.dumps(out))

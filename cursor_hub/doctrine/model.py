@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
-DOCTRINE_SETUP_SCHEMA_VERSION = 1
+DOCTRINE_SETUP_SCHEMA_VERSION = 2
 
 SetupStatus = Literal[
     "INCOMPLETE",
@@ -54,7 +54,10 @@ class ComponentProfile:
     mutable_state: str = UNKNOWN
     concurrent_access: str = UNKNOWN
     explicit_sync: str = UNKNOWN
+    atomics_usage: str = UNKNOWN
     alloc_sensitive: str = UNKNOWN
+    extra_required_project_files: list[str] = field(default_factory=list)
+    extra_required_doctrine_refs: list[str] = field(default_factory=list)
     numeric_compute: str = UNKNOWN
     external_data: str = UNKNOWN
     persistent_storage: str = UNKNOWN
@@ -84,6 +87,9 @@ def default_setup_metadata() -> dict[str, Any]:
         "sections": {s: "incomplete" for s in SECTIONS},
         "unknown_count": 0,
         "last_reviewed": None,
+        "awaiting_final_approval": False,
+        "approved_at": None,
+        "approval_revision": 0,
     }
 
 

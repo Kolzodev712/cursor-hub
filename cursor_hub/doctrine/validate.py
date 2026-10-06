@@ -74,6 +74,10 @@ def write_setup_metadata(project_root: str, result: ValidationResult) -> None:
     meta["unknown_count"] = result.unknown_count
     if result.ok_for_install:
         meta["last_reviewed"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    if "awaiting_final_approval" not in meta:
+        meta["awaiting_final_approval"] = False
+    if "approval_revision" not in meta:
+        meta["approval_revision"] = 0
     os.makedirs(os.path.dirname(paths["setup"]), exist_ok=True)
     with open(paths["setup"], "w", encoding="utf-8") as f:
         json.dump(meta, f, indent=2)

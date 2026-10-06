@@ -23,6 +23,12 @@ from cursor_hub.doctrine.render import (
 )
 from cursor_hub.doctrine.setup_io import SetupIO
 from cursor_hub.doctrine.routing import domains_for_component
+from cursor_hub.doctrine.staging import (
+    mark_approved,
+    mark_awaiting_final_approval,
+    publish_answers,
+    write_staging,
+)
 from cursor_hub.doctrine.validate import (
     ValidationResult,
     finalize_setup_status,
@@ -108,9 +114,13 @@ COMPONENT_INTERVIEW: tuple[tuple[str, str, str], ...] = (
     ),
     (
         "explicit_sync",
-        "Does the code rely on explicit synchronization (mutexes, atomics, lock-free structures) "
-        "to protect shared state?",
+        "Does the code use mutexes or read-write locks (not atomics alone) to protect shared state?",
         "Use N/A if there is no shared mutable state.",
+    ),
+    (
+        "atomics_usage",
+        "Does the code use atomic operations or lock-free atomics-based structures on hot paths?",
+        "Use N/A if atomics are not used. Mutex-only synchronization is not atomics usage.",
     ),
     (
         "alloc_sensitive",
@@ -238,28 +248,72 @@ def run_section_repository(
     return True
 
 
+def _read_existing(path: str) -> str | None:
+    if not os.path.isfile(path):
+        return None
+    try:
+        with open(path, encoding="utf-8") as f:
+            return f.read()
+    except OSError:
+        return None
+
+
 def _persist_partial(project_root: str, answers: SetupAnswers, keys: tuple[str, ...]) -> None:
+    from cursor_hub.doctrine.markdown_merge import merge_managed_markdown
+    from cursor_hub.doctrine.render import (
+        MARKER_INVARIANTS,
+        MARKER_OBJECTIVES,
+        MARKER_REPO,
+        MARKER_WORKLOAD,
+    )
+
     paths = doctrine_paths(project_root)
     os.makedirs(os.path.dirname(paths["architecture"]), exist_ok=True)
     if "architecture" in keys:
+        merged = merge_managed_markdown(
+            _read_existing(paths["architecture"]),
+            render_architecture(answers),
+            section_header="# Repository responsibility",
+            marker=MARKER_REPO,
+        )
         with open(paths["architecture"], "w", encoding="utf-8") as f:
-            f.write(render_architecture(answers))
+            f.write(merged)
     if "objectives" in keys:
+        merged = merge_managed_markdown(
+            _read_existing(paths["objectives"]),
+            render_objectives(answers),
+            section_header="# Engineering objectives",
+            marker=MARKER_OBJECTIVES,
+        )
         with open(paths["objectives"], "w", encoding="utf-8") as f:
-            f.write(render_objectives(answers))
+            f.write(merged)
     if "invariants" in keys:
+        merged = merge_managed_markdown(
+            _read_existing(paths["invariants"]),
+            render_invariants(answers),
+            section_header="# Invariants",
+            marker=MARKER_INVARIANTS,
+        )
         with open(paths["invariants"], "w", encoding="utf-8") as f:
-            f.write(render_invariants(answers))
+            f.write(merged)
     if "workload" in keys:
+        merged = merge_managed_markdown(
+            _read_existing(paths["workload"]),
+            render_workload(answers),
+            section_header="# Workload and platform facts",
+            marker=MARKER_WORKLOAD,
+        )
         with open(paths["workload"], "w", encoding="utf-8") as f:
-            f.write(render_workload(answers))
+            f.write(merged)
     if "components" in keys:
         with open(paths["components"], "w", encoding="utf-8") as f:
             f.write(render_components_json(answers))
-    _write_progress_metadata(project_root, keys)
+    _write_progress_metadata(project_root, keys, answers)
 
 
-def _write_progress_metadata(project_root: str, completed_keys: tuple[str, ...]) -> None:
+def _write_progress_metadata(
+    project_root: str, completed_keys: tuple[str, ...], answers: SetupAnswers
+) -> None:
     result = validate_doctrine_setup(project_root)
     sections = dict(result.sections)
     for key in completed_keys:
@@ -267,15 +321,14 @@ def _write_progress_metadata(project_root: str, completed_keys: tuple[str, ...])
         if sec:
             sections[sec] = "complete"
     status = finalize_setup_status(sections, result.unknown_count, issues=result.issues or None)
-    write_setup_metadata(
-        project_root,
-        ValidationResult(
-            status=status,
-            issues=result.issues,
-            sections=sections,
-            unknown_count=result.unknown_count,
-        ),
+    vr = ValidationResult(
+        status=status,
+        issues=result.issues,
+        sections=sections,
+        unknown_count=result.unknown_count,
     )
+    write_setup_metadata(project_root, vr)
+    write_staging(project_root, answers)
 
 
 def run_section_objectives(project_root: str, answers: SetupAnswers, io: SetupIO) -> bool:
@@ -451,9 +504,10 @@ def _interview_component(comp: ComponentProfile, io: SetupIO, root: str) -> None
             io.writeln("Apply concurrency/external-data hints from scan? [Y/N/U]")
             apply = io.readline("> ").strip().lower()
             if apply in ("y", "yes"):
-                if hints.get("atomic") or hints.get("mutex"):
-                    comp.concurrent_access = "yes"
+                if hints.get("mutex"):
                     comp.explicit_sync = "yes"
+                if hints.get("atomic"):
+                    comp.atomics_usage = "yes"
                 if hints.get("serde") or hints.get("network"):
                     comp.external_data = "yes"
 
@@ -546,42 +600,42 @@ def _summary(project_root: str, answers: SetupAnswers, status: str) -> str:
         else:
             lines.append("    derived decision topics: (none — minimal gate refs)")
     lines.append(f"\nSetup result:\n{status}")
-    lines.append("\n[W] Write/update  [B] Back  [C] Cancel")
+    lines.append("\n[W] Write/update (required to approve)  [B] Back  [C] Cancel  [Q] Quit without approving")
     return "\n".join(lines)
 
 
 def run_review_unknowns(project_root: str, answers: SetupAnswers, io: SetupIO) -> int:
+    from cursor_hub.doctrine.unknowns import apply_unknown_resolution, collect_unknown_fields
+
     paths = doctrine_paths(project_root)
-    unknowns: list[tuple[str, str]] = []
-    for label, path in (
-        ("Repository responsibility", paths["architecture"]),
-        ("Objectives priority", paths["objectives"]),
-        ("Workload", paths["workload"]),
-    ):
-        if not os.path.isfile(path):
-            continue
-        with open(path, encoding="utf-8") as f:
-            text = f.read()
-        for line in text.splitlines():
-            if ": UNKNOWN" in line or line.strip() == "UNKNOWN":
-                unknowns.append((line.strip(), label))
+    answers = load_answers_from_project(paths, project_root=project_root)
+    unknowns = collect_unknown_fields(answers)
     if not unknowns:
         io.writeln("No UNKNOWN fields found.")
         return 0
-    io.writeln("Outstanding doctrine knowledge gaps:\n")
-    for i, (line, _) in enumerate(unknowns, 1):
-        io.writeln(f"{i}. {line}")
-    io.writeln("\n[R] Resolve first  [K] Keep  [S] Skip/exit")
+    io.writeln("Outstanding doctrine knowledge gaps (UNKNOWN only; N/A is intentional):\n")
+    for i, ref in enumerate(unknowns, 1):
+        io.writeln(f"  [{i}] {ref.label}  ({ref.field_id})")
+    io.writeln("\nEnter number to resolve, or [S] Skip/exit:")
     choice = io.readline("> ").strip().lower()
-    if choice.startswith("r"):
-        io.writeln("Enter new value (or U to keep unknown):")
-        new = io.readline("> ").strip()
-        if new and new.lower() not in ("u", "unknown"):
-            # Only handle workload field lines key: UNKNOWN
-            if ":" in unknowns[0][0]:
-                key = unknowns[0][0].split(":", 1)[0].strip()
-                answers.workload_fields[key] = new
-                _persist_partial(project_root, answers, ("workload",))
+    if choice in ("s", "skip", "q", "quit", ""):
+        return 0
+    if not choice.isdigit():
+        io.writeln("Invalid choice.")
+        return 1
+    idx = int(choice) - 1
+    if idx < 0 or idx >= len(unknowns):
+        io.writeln("Invalid choice.")
+        return 1
+    ref = unknowns[idx]
+    io.writeln(f"New value for {ref.label} (U=keep UNKNOWN, N/A=not applicable):")
+    new = io.readline("> ").strip()
+    ok, err = apply_unknown_resolution(answers, ref.field_id, new)
+    if not ok:
+        io.writeln(err or "Could not apply value.")
+        return 1
+    _persist_partial(project_root, answers, ref.persist_keys)
+    io.writeln("Updated.")
     return 0
 
 
@@ -595,7 +649,8 @@ def _run_setup_body(
     review: bool,
     review_unknowns: bool,
 ) -> int:
-    answers = load_answers_from_project(doctrine_paths(project_root))
+    paths = doctrine_paths(project_root)
+    answers = load_answers_from_project(paths, project_root=project_root)
     report = inspect_repository(project_root)
 
     if review_unknowns:
@@ -629,7 +684,7 @@ def _run_setup_body(
                 run_section_workload(project_root, answers, io)
             elif sec == "components":
                 run_section_components(project_root, answers, io, report)
-            answers = load_answers_from_project(doctrine_paths(project_root))
+            answers = load_answers_from_project(paths, project_root=project_root)
 
     order = [
         ("repository", lambda: run_section_repository(project_root, answers, io, report)),
@@ -646,23 +701,56 @@ def _run_setup_body(
             io.writeln("\nSetup cancelled. Resume with:\n  cursor-hub doctrine setup .")
             write_setup_metadata(project_root, validate_doctrine_setup(project_root))
             return 1
-        answers = load_answers_from_project(doctrine_paths(project_root))
+        answers = load_answers_from_project(paths, project_root=project_root)
 
     result = validate_doctrine_setup(project_root)
+    _apply_lifecycle(project_root, mark_awaiting_final_approval)
+    write_setup_metadata(project_root, validate_doctrine_setup(project_root))
     io.writeln(_summary(project_root, answers, result.status))
     final = io.readline("> ").strip().lower()
-    if final in ("c", "cancel"):
-        io.writeln("\nSetup cancelled. Partial progress saved.")
+    if final in ("c", "cancel", "q", "quit", ""):
+        io.writeln("\nSetup cancelled. Staged progress saved; configuration not approved.")
+        _apply_lifecycle(project_root, lambda m: m.update({"awaiting_final_approval": False}))
         write_setup_metadata(project_root, validate_doctrine_setup(project_root))
         return 1
     if final in ("b", "back"):
         return run_setup(project_root, io, review=True)
+    if final not in ("w", "write"):
+        io.writeln("\nInvalid choice. Configuration not approved.")
+        return 1
 
-    _persist(project_root, answers)
+    ok, err = publish_answers(project_root, answers)
+    if not ok:
+        io.writeln(f"\nPublication failed: {err}")
+        return 1
+    _apply_lifecycle(project_root, mark_approved)
     result = validate_doctrine_setup(project_root)
     write_setup_metadata(project_root, result)
     io.writeln(f"\nSetup finished: {result.status}")
     return 0 if result.ok_for_install else 1
+
+
+def _apply_lifecycle(project_root: str, fn) -> None:
+    import json
+
+    setup_path = doctrine_paths(project_root)["setup"]
+    meta: dict = {}
+    if os.path.isfile(setup_path):
+        try:
+            with open(setup_path, encoding="utf-8") as f:
+                meta = json.load(f)
+        except (OSError, json.JSONDecodeError):
+            meta = {}
+    if not isinstance(meta, dict):
+        meta = {}
+    fn(meta)
+    meta["schema_version"] = 2
+    os.makedirs(os.path.dirname(setup_path), exist_ok=True)
+    tmp = setup_path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(meta, f, indent=2)
+        f.write("\n")
+    os.replace(tmp, setup_path)
 
 
 def run_setup(

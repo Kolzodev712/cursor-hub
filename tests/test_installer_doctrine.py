@@ -25,6 +25,19 @@ def _scripted_doctrine_setup(target, io, **kwargs):
     return complete_minimal_setup(target)
 
 
+def _full_read_payload(target: str, rel_path: str, session: str) -> dict:
+    abs_path = os.path.join(target, rel_path.replace("/", os.sep))
+    with open(abs_path, encoding="utf-8") as f:
+        content = f.read()
+    return {
+        "tool_name": "Read",
+        "tool_input": {"path": rel_path},
+        "tool_output": {"content": content},
+        "conversation_id": session,
+        "workspace_root": target,
+    }
+
+
 class InstallerDoctrineTests(unittest.TestCase):
     def setUp(self) -> None:
         self._tmp = tempfile.mkdtemp(prefix="cursor-hub-install-")
@@ -170,13 +183,10 @@ class InstallerDoctrineTests(unittest.TestCase):
         self.assertEqual(deny["permission"], "deny")
         self.assertIn("objectives.md", deny["agent_message"])
 
-        read_payload = {
-            "tool_name": "Read",
-            "tool_input": {"path": ".cursor/doctrine/objectives.md"},
-            "conversation_id": session,
-            "workspace_root": self.target,
-        }
-        handle_track_read(read_payload, self.target)
+        handle_track_read(
+            _full_read_payload(self.target, ".cursor/doctrine/objectives.md", session),
+            self.target,
+        )
         still = handle_gate_write(write_payload, self.target)
         self.assertEqual(still["permission"], "deny")
 
@@ -185,12 +195,7 @@ class InstallerDoctrineTests(unittest.TestCase):
             ".cursor/skills/engineering-doctrine/decision/evidence.md",
         ):
             handle_track_read(
-                {
-                    "tool_name": "Read",
-                    "tool_input": {"path": path},
-                    "conversation_id": session,
-                    "workspace_root": self.target,
-                },
+                _full_read_payload(self.target, path, session),
                 self.target,
             )
         allow = handle_gate_write(write_payload, self.target)
@@ -240,12 +245,7 @@ class InstallerDoctrineTests(unittest.TestCase):
                 f,
             )
         handle_track_read(
-            {
-                "tool_name": "Read",
-                "tool_input": {"path": ".cursor/doctrine/objectives.md"},
-                "conversation_id": "session-a",
-                "workspace_root": self.target,
-            },
+            _full_read_payload(self.target, ".cursor/doctrine/objectives.md", "session-a"),
             self.target,
         )
         deny = handle_gate_write(
@@ -331,12 +331,7 @@ class InstallerDoctrineTests(unittest.TestCase):
             )
         inv = os.path.join(self.target, ".cursor", "doctrine", "invariants.md")
         handle_track_read(
-            {
-                "tool_name": "Read",
-                "tool_input": {"path": inv},
-                "conversation_id": session,
-                "workspace_root": self.target,
-            },
+            _full_read_payload(self.target, ".cursor/doctrine/invariants.md", session),
             self.target,
         )
         write_payload = {
@@ -351,12 +346,7 @@ class InstallerDoctrineTests(unittest.TestCase):
         denied = handle_gate_write(write_payload, self.target)
         self.assertEqual(denied["permission"], "deny")
         handle_track_read(
-            {
-                "tool_name": "Read",
-                "tool_input": {"path": inv},
-                "conversation_id": session,
-                "workspace_root": self.target,
-            },
+            _full_read_payload(self.target, ".cursor/doctrine/invariants.md", session),
             self.target,
         )
         self.assertEqual(handle_gate_write(write_payload, self.target)["permission"], "allow")
@@ -378,12 +368,7 @@ class InstallerDoctrineTests(unittest.TestCase):
                 f,
             )
         handle_track_read(
-            {
-                "tool_name": "Read",
-                "tool_input": {"path": ".cursor/doctrine/objectives.md"},
-                "conversation_id": "chat-a",
-                "workspace_root": self.target,
-            },
+            _full_read_payload(self.target, ".cursor/doctrine/objectives.md", "chat-a"),
             self.target,
         )
         deny = handle_gate_write(
@@ -402,6 +387,54 @@ class HooksMergeUnitTests(unittest.TestCase):
         frag = {"hooks": {"preToolUse": [{"command": "a", "matcher": "Write"}]}}
         merged = merge_hooks_json(frag, frag)
         self.assertEqual(len(merged["hooks"]["preToolUse"]), 1)
+
+    def test_invalid_existing_hooks_json_blocks_merge(self) -> None:
+        tmp = tempfile.mkdtemp()
+        try:
+            cursor = os.path.join(tmp, ".cursor")
+            os.makedirs(cursor, exist_ok=True)
+            with open(os.path.join(cursor, "hooks.json"), "w", encoding="utf-8") as f:
+                f.write("{ broken")
+            from cursor_hub.installer import merge_hooks_json_from_pack
+
+            pack = os.path.join(_REPO_ROOT, "packs", "cursor", "engineering-doctrine")
+            ok, err = merge_hooks_json_from_pack(pack, tmp, dry_run=True)
+            self.assertFalse(ok)
+            self.assertIsNotNone(err)
+            with open(os.path.join(cursor, "hooks.json"), encoding="utf-8") as f:
+                self.assertEqual(f.read(), "{ broken")
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+    def test_hub_owned_refresh_preserves_user_hooks(self) -> None:
+        existing = {
+            "hooks": {
+                "preToolUse": [
+                    {
+                        "command": "python3 .cursor/hooks/doctrine_enforcement.py gate-write",
+                        "matcher": "Write",
+                    },
+                    {"command": ".cursor/hooks/user.sh", "matcher": "curl"},
+                ]
+            }
+        }
+        fragment = {
+            "hooks": {
+                "preToolUse": [
+                    {
+                        "command": "python3 .cursor/hooks/doctrine_enforcement.py gate-write",
+                        "matcher": "Write|Delete",
+                        "failClosed": True,
+                    }
+                ]
+            }
+        }
+        merged = merge_hooks_json(existing, fragment)
+        entries = merged["hooks"]["preToolUse"]
+        self.assertEqual(len(entries), 2)
+        hub = [e for e in entries if "doctrine_enforcement" in e.get("command", "")]
+        self.assertEqual(hub[0]["matcher"], "Write|Delete")
+        self.assertTrue(any("user.sh" in e.get("command", "") for e in entries))
 
 
 if __name__ == "__main__":

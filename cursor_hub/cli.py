@@ -50,7 +50,7 @@ def cmd_doctrine_status(args: argparse.Namespace) -> int:
         "",
         f"Setup status:\n{result.status}",
         "",
-        f"Schema: 1",
+        f"Schema: 2",
         "",
         "Sections:",
     ]

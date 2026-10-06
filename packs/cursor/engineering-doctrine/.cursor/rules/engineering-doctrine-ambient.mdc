@@ -23,3 +23,7 @@ Follow this hierarchy for substantive code or architecture work (not typos or on
 - **Simplicity:** Identify the limiting resource before advanced techniques; prefer the simplest approach that satisfies project constraints.
 
 Slash commands (design review, gates, bugfix) remain for deliberate audits; they do not replace this baseline.
+
+## Advisory and user-owned implementation
+
+When the user asks for **design review**, **explanation**, **challenge or review only**, **no code**, or **user-owned implementation**, stay advisory: analyze, question, and recommend without taking task ownership or writing code unless they explicitly request implementation. Learning-oriented pilots (e.g. exploring a codebase together) do not authorize autonomous refactors, benchmarks, or test harness changes unless the user directs that work.
