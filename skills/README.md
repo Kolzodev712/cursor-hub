@@ -1,6 +1,6 @@
 # Cursor skills (hub-maintained)
 
-These are **Cursor Agent Skills** (`SKILL.md` + optional reference files). They are **not** installed by `cursor-hub install` today (that flow only merges packs: rules, commands, agents, tools).
+These are **Cursor Agent Skills** (`SKILL.md` + optional reference files). Packs declare **`skills:`** in `pack.yml`; the installer copies listed skills into `.cursor/skills/` (e.g. `engineering-doctrine`, `rust-best-practices`, `fault-first`). Manual copy/symlink still works.
 
 To use a skill in a project:
 
@@ -16,3 +16,4 @@ Or symlink for development. Cursor discovers skills under **`.cursor/skills/<nam
 | Skill | Purpose |
 |-------|---------|
 | [rust-best-practices](rust-best-practices/SKILL.md) | Rust idioms, API guidelines checklist, security/tooling baseline; see references inside. |
+| [fault-first](fault-first/SKILL.md) | Read-only, bounded failure analysis (FMEA-/FTA-/STPA-inspired); installed with the `fault-first` pack. |

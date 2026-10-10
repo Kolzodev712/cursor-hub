@@ -67,7 +67,7 @@ Optional: add to an existing language install — doctrine is **not** part of `-
 The installer:
 
 - Merges the **engineering-doctrine** rule and hook scripts
-- **Merges** `hooks.json` (dedupes hub entries; preserves user hooks)
+- **Merges** `hooks.json` (refreshes **hub-owned** entries by script name; preserves unrelated user hooks; **fails** if existing `hooks.json` is invalid JSON)
 - Installs the **engineering-doctrine** skill under `.cursor/skills/`
 - **Bootstraps** missing files under `.cursor/doctrine/` only (never overwrites project content, including with `--overwrite`)
 - On an **interactive** terminal, runs **guided repository setup** when project doctrine is not yet valid (resume anytime with `cursor-hub doctrine setup .`)
@@ -118,8 +118,9 @@ Empty `components` disables write gates (policy rules still apply).
 When Cursor runs project hooks:
 
 - **preToolUse (Write family):** If repository setup is `INCOMPLETE`, `INVALID`, or `STALE_SCHEMA`, denies substantive writes until `cursor-hub doctrine setup .` completes successfully. `COMPLETE_WITH_UNKNOWNS` is allowed — unknown facts must not be invented by agents.
-- **postToolUse (Read):** After a successful Read, records a **SHA-256 fingerprint** of each path under `.cursor/doctrine/` or `.cursor/skills/` for the session.
-- **preToolUse (Write family):** Denies writes to classified paths until required files were read **at their current fingerprint** in that session.
+- **postToolUse (Read):** Tracks reads under `.cursor/doctrine/`, `.cursor/skills/`, and `components.json`. **Mandatory context** is satisfied only when the hook records **`full_text`** (Read tool output matches the file SHA-256) or **`hook_supplied`** (complete file emitted via `additional_context` for a path-only Read, file ≤512KB). Path-only or partial Read output does **not** unlock classified writes. File-change invalidation uses stored fingerprints.
+- **preCompact:** Clears read credits for the session (re-read required after compaction).
+- **preToolUse (Write family):** Denies writes to classified paths until mandatory context is satisfied for that session; rejects path traversal and unrecognized multi-file mutation payloads where extraction is required.
 
 **Invalid `components.json`:** If the file **exists** but cannot be parsed or validated, **all substantive file writes** are denied until it is fixed. An empty valid `components: []` disables classification gates (policy rules still apply).
 
@@ -128,7 +129,7 @@ When Cursor runs project hooks:
 **Limitations (document honestly):**
 
 - **Engineering-process enforcement, not a security boundary.** Hook coverage is limited to supported Cursor file-write tools. Shell redirects, MCP writes, and other paths bypass the gate until Cursor exposes reliable hooks for them.
-- Read tracking means **the agent received the current bytes**, not that it understood them — the ambient rule still requires using doctrine in reasoning.
+- Satisfying the gate means **verified full content** was recorded for that path version, not that the model understood it — the ambient rule still requires using doctrine in reasoning.
 - **Ephemeral session (residual):** Keys are `ephemeral:pid-<pid>:root-<hash>`. This removes the old global `default` bucket but **does not** isolate two chats in the **same Cursor process and workspace** when **both** lack `conversation_id` — they can share read state. For the real-repo experiment, confirm whether Cursor normally sends `conversation_id` in hook payloads; if yes, this edge case is rare. See [experiment-engineering-doctrine.md](experiment-engineering-doctrine.md).
 - Hooks do not auto-invoke skills; the ambient rule asks the model to load the skill when relevant.
 
@@ -142,7 +143,7 @@ Before adding harness features, run the **one-component** A/B procedure and scor
 |----------|-----------|
 | Hub rules/commands/agents | Hub-managed; `--overwrite` refreshes on collision |
 | Hub hook scripts | Hub-managed; refreshed on doctrine install |
-| `hooks.json` | **Merged** — user entries kept; hub entries deduped by command+matcher |
+| `hooks.json` | **Merged** — user entries kept; hub entries (`doctrine_enforcement.py`, `doctrine_setup_gate.py`) refreshed on reinstall |
 | `.cursor/doctrine/*` (after bootstrap) | **Project-managed** — never overwritten by install |
 | `.cursor/skills/*` | Hub files added/updated with `--overwrite`; existing files skipped otherwise |
 | Design logs `NNN-*.md` | **Project-managed** (unchanged) |

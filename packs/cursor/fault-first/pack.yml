@@ -1,0 +1,5 @@
+name: fault-first
+description: Opt-in, read-only failure-oriented engineering analysis grounded in system contracts and evidence.
+version: "0.1.0"
+skills:
+  - fault-first

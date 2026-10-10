@@ -1,6 +1,6 @@
 # Real-repo experiment — engineering doctrine
 
-Use this **after** cursor-hub foundation hardening (invalid config fail-closed, fingerprint read state, ephemeral session keys). Goal: learn whether **policy + routing + project facts + hooks** improve engineering judgment in **normal conversation**, not whether the hook denies the first write (covered by unit tests).
+Use this **after** cursor-hub foundation on **`7ab851d`** or later (schema v2 setup, mandatory read credits, invalid config fail-closed, ephemeral session keys). Goal: learn whether **policy + routing + project facts + hooks** improve engineering judgment in **normal conversation**, not whether the hook denies the first write (covered by unit tests). Optional **Phase 2:** add the **`fault-first`** pack for read-only failure analysis — see [fault-first.md](fault-first.md).
 
 **Do not expand the harness** until this experiment produces findings from a real codebase.
 

@@ -1,8 +1,9 @@
-# cursor-hub corrective review (local candidate)
+# cursor-hub corrective review (archive)
 
-**Audited base (remote):** `a9390b96f74fdb37c0d17b3489bd567ca5cd6068`  
-**Working tree:** corrective changes **not committed** (per review gate).  
-**External bundle:** No `APPLY.md` / `MANIFEST.json` / `apply.py` bundle was present in the repo or agent stores; corrections were applied directly against the checkout at `a9390b9`.
+**Status:** Merged to `main` as **`7ab851dd75fd31720616bf585dbe5f56205a3df2`** (`fix(doctrine): close corrective gaps for gate, setup, and hooks`). This document records the review that led to that commit; it is not a description of uncommitted work.
+
+**Audited base:** `a9390b96f74fdb37c0d17b3489bd567ca5cd6068`
+**External bundle:** No `APPLY.md` / `MANIFEST.json` / `apply.py` bundle was present; corrections were applied directly in the checkout.
 
 ## Confirmed defects on base (severity)
 
@@ -11,11 +12,11 @@
 | D1 | **High** | Component interview traits/responsibility not round-tripped in `components.json` (reload lost routing inputs). |
 | D2 | **High** | `explicit_sync` (mutex) incorrectly mapped to **atomics** decision domain. |
 | D3 | **High** | Setup could be structurally “complete” without explicit final **W** approval (`approved_at` missing). |
-| D4 | **Medium** | Read gate credited path-only Reads; no `additional_context` for small docs; no `preCompact` invalidation. |
+| D4 | **Medium** | Read gate credited path-only Reads; no `additional_context` for small docs; no `preCompact` invalidation. **Addressed in 7ab851d:** mandatory context requires `full_text` or `hook_supplied`; path-only/partial do not unlock writes; `preCompact` clears credits; `additional_context` for path-only reads when hook supplies full file (≤512KB). |
 | D5 | **Medium** | Path traversal not rejected on classified write paths. |
 | D6 | **Low** | Summary could mis-report domains when in-memory traits missing (partially addressed). |
 
-## Corrective changes (this candidate)
+## Corrective changes (shipped in 7ab851d)
 
 - **Schema v2** (`DOCTRINE_SETUP_SCHEMA_VERSION = 2`): `approved_at`, `awaiting_final_approval`, `approval_revision` in `setup.json`.
 - **Staging** (`.cursor/doctrine/.setup-staging.json`) + **publication journal** (`.setup-publication.journal.json`) with per-file `os.replace`.
@@ -30,7 +31,7 @@
 ```text
 python3 tools/validate_packs.py                 — passed
 python3 tools/validate_doctrine_sources.py      — passed
-python3 -m unittest discover -s tests -v        — OK (35 tests)
+python3 -m unittest discover -s tests -v        — OK (52 tests at merge; 59 after fault-first pack added later)
 ```
 
 **Python runtimes tested:** `python3.12.3` only (`python3.10` / `python3.11` / `python3.13` not present on this host).
@@ -58,12 +59,14 @@ cursor-hub doctrine setup /tmp/doctrine-pty-test
 
 ## Known limitations / unverified
 
-- Full **10-area** checklist (installer manifest retirement, SQLite state, multi-file patch adapter, exhaustive unknown-review field classes, hook merge refresh policy) is **not fully implemented** in this candidate — only items tied to confirmed D1–D5.
+- Full **10-area** checklist (installer manifest retirement, SQLite state, exhaustive unknown-review UX) remains **partial**; hook merge refresh and multi-path write extraction were added in 7ab851d.
 - **Four byte-identical hook modules:** repo ships **two** hub-synced modules (`doctrine_enforcement.py`, `doctrine_setup_gate.py`).
 - **v1 → v2 migration:** existing `setup.json` with `schema_version: 1` → `STALE_SCHEMA`; requires interactive setup/re-approval (legacy markdown preserved).
 - **Power-loss:** journal records attempts; not a full transactional DB.
 - **ll-cache:** not installed (per review scope).
 
-## Recommendation
+## Follow-on work (post-7ab851d)
 
-Review the local diff, re-run PTY walkthrough + `discover -s tests -v`, then commit/push when you authorize. First pilot target remains a **disposable ll-cache clone**, not trading-system.
+- **Frozen doctrine baseline:** `7ab851d` for ll-cache Phase 1 (disposable clone, doctrine setup, hook `conversation_id` check).
+- **Optional pack:** `fault-first` (read-only failure analysis) — see [fault-first.md](fault-first.md); not part of `--lang` bundles.
+- **Pilot target:** disposable **ll-cache** clone, not trading-system.

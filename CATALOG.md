@@ -38,6 +38,22 @@ See [docs/engineering-doctrine.md](docs/engineering-doctrine.md).
 
 ---
 
+## fault-first (optional — read-only failure analysis)
+
+**Purpose:** Explicit, bounded failure-oriented review of a named component, boundary, or top event. Uses FMEA-/FTA-/STPA-*inspired* reasoning without claiming standards compliance. Read-only: no edits, no test execution, no hooks.
+
+**Install:** `cursor-hub install fault-first <target>` — **not** part of default `--lang` bundles.
+
+**Contents:**
+
+- **Command:** `/fault-first__analyze` — delegates to the `fault-first` skill.
+- **Agent:** `fault-first-analyst.md` — skeptical analyst role (not an implementer).
+- **Skill:** `fault-first` (installed to `.cursor/skills/` via `pack.yml` `skills:`).
+
+See [docs/fault-first.md](docs/fault-first.md).
+
+---
+
 ## Main workflow (use in any order or on their own)
 
 Each pack has its own workflow step numbering. Use design review, implement, and/or add tests as needed — you are not forced to run all of them. **The design log is created or updated automatically** at the end of each command.
@@ -126,6 +142,12 @@ You drive the inputs; the model refuses to propose solutions or write code until
 | Command | Description |
 |--------|-------------|
 | `/security__standalone-audit` | One-pass security review: vulnerabilities, deps, secrets, auth, crypto, misconfiguration, CI/CD; report with severity and recommendations. |
+
+### Fault-first (read-only)
+
+| Command | Description |
+|--------|-------------|
+| `/fault-first__analyze` | Bounded failure analysis for an explicitly scoped component or top event; epistemic labels, falsifiable test proposals, no autonomous implementation. |
 
 ---
 
@@ -242,6 +264,16 @@ You drive the inputs; the model refuses to propose solutions or write code until
 **Commands (standalone):** security__standalone-audit.
 
 **Agents:** `security.md`.
+
+### fault-first
+
+**Purpose:** Opt-in, read-only failure-mode / fault-tree / control-interaction analysis for a user-named scope. Consumes project doctrine when present; does not modify doctrine or install hooks.
+
+**Commands (standalone):** fault-first__analyze.
+
+**Agents:** `fault-first-analyst.md`.
+
+**Skills:** `fault-first`.
 
 ---
 

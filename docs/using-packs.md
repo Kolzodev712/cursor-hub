@@ -4,7 +4,9 @@ After you run `cursor-hub install all ../my-project` or `cursor-hub install --la
 
 The same workflow structure is available for **Rust**, **Python**, **JS/TS**, and **Terraform**. Substitute the pack prefix: `rust-`, `python-`, `js-ts-`, or `terraform-` (e.g. `/python-design-review__wf-1-design-review`). See [CATALOG.md](../CATALOG.md) for the full list and language-pack table.
 
-**Rust installs:** **`rust-best-practices-skill.mdc`** (file-scoped to `*.rs` / `Cargo.toml` / `build.rs`) tells the agent to read **`.cursor/skills/rust-best-practices/SKILL.md`** before substantive Rust edits when that folder exists. Copy or symlink the hub’s **[`skills/rust-best-practices/`](../skills/rust-best-practices/)** tree into your project’s **`.cursor/skills/`** (see [skills/README.md](../skills/README.md)); the pack installer does not copy skills automatically.
+**Skills:** Packs list dependencies in `pack.yml` (`skills:`); the installer copies them into **`.cursor/skills/`** (e.g. **`rust-implementation`** → `rust-best-practices`, **`engineering-doctrine`** → `engineering-doctrine`, **`fault-first`** → `fault-first`). **`rust-best-practices-skill.mdc`** (from rust packs) points agents at **`.cursor/skills/rust-best-practices/SKILL.md`** when present. Manual copy/symlink still works — see [skills/README.md](../skills/README.md).
+
+**Optional ambient / analysis packs (not in `--lang` bundles):** **`engineering-doctrine`** — project `.cursor/doctrine/`, hooks, setup wizard ([engineering-doctrine.md](engineering-doctrine.md)). **`fault-first`** — read-only `/fault-first__analyze` ([fault-first.md](fault-first.md)).
 
 ---
 
