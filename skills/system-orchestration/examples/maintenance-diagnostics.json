@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "mission": {
+    "schema_version": 1,
+    "mission_id": "maintenance-diagnostics",
+    "revision": 1,
+    "execution_mode": "simulation",
+    "objective": "SYNTHETIC FIXTURE: assess supplied evidence; do not inspect or modify a real repository or machine.",
+    "scope": [
+      "legacy-lathe-diagnostics"
+    ],
+    "event_sources": [
+      "fixture-input"
+    ],
+    "allowed_actions": [
+      "request_human_review"
+    ],
+    "approval_required": [
+      "request_human_review"
+    ],
+    "approvers": [
+      "human-operator"
+    ],
+    "required_checks": [
+      "fixture-scope-check",
+      "fixture-evidence-check"
+    ],
+    "evidence_producers": [
+      "fixture-verifier"
+    ],
+    "unresolved": [],
+    "limits": {
+      "max_runs": 2,
+      "max_events": 100,
+      "max_model_calls": 2,
+      "max_tokens": 4000,
+      "max_duration_seconds": 120
+    }
+  },
+  "events": [
+    {
+      "schema_version": 1,
+      "event_id": "event-1",
+      "at": 0,
+      "kind": "observe",
+      "payload": {
+        "run_id": "run-1",
+        "source": "fixture-input",
+        "origin": "external",
+        "scope": "legacy-lathe-diagnostics",
+        "snapshot": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    {
+      "schema_version": 1,
+      "event_id": "event-2",
+      "at": 1,
+      "kind": "investigate",
+      "payload": {
+        "run_id": "run-1"
+      }
+    },
+    {
+      "schema_version": 1,
+      "event_id": "event-3",
+      "at": 2,
+      "kind": "worker_result",
+      "payload": {
+        "run_id": "run-1",
+        "snapshot": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "mission_fingerprint": "a56d00e8b5700a635313e90bf6fdec4d2fe9171f638312c4b197c4a6b4eb3860",
+        "proposal_id": "proposal-1",
+        "action": "request_human_review",
+        "summary": "Synthetic hypothesis for supervisor tests, NOT a finding about actual ll-cache code or any machine.",
+        "classification": "hypothesis",
+        "usage": {
+          "model_calls": 1,
+          "tokens": 300
+        }
+      }
+    },
+    {
+      "schema_version": 1,
+      "event_id": "event-4",
+      "at": 3,
+      "kind": "approve",
+      "payload": {
+        "run_id": "run-1",
+        "snapshot": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "mission_fingerprint": "a56d00e8b5700a635313e90bf6fdec4d2fe9171f638312c4b197c4a6b4eb3860",
+        "proposal_fingerprint": "4fc52e05b628d8c8083bf3a81012b26b3b38c3b7b0cf2fbc026aec033b8a74ec",
+        "approver": "human-operator",
+        "expires_at": 100
+      }
+    },
+    {
+      "schema_version": 1,
+      "event_id": "event-5",
+      "at": 4,
+      "kind": "authorize",
+      "payload": {
+        "run_id": "run-1"
+      }
+    },
+    {
+      "schema_version": 1,
+      "event_id": "event-6",
+      "at": 5,
+      "kind": "execute",
+      "payload": {
+        "run_id": "run-1",
+        "snapshot": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "mission_fingerprint": "a56d00e8b5700a635313e90bf6fdec4d2fe9171f638312c4b197c4a6b4eb3860",
+        "proposal_fingerprint": "4fc52e05b628d8c8083bf3a81012b26b3b38c3b7b0cf2fbc026aec033b8a74ec",
+        "operation_id": "operation-1",
+        "outcome": "succeeded"
+      }
+    },
+    {
+      "schema_version": 1,
+      "event_id": "event-7",
+      "at": 6,
+      "kind": "evidence",
+      "payload": {
+        "run_id": "run-1",
+        "snapshot": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "mission_fingerprint": "a56d00e8b5700a635313e90bf6fdec4d2fe9171f638312c4b197c4a6b4eb3860",
+        "proposal_fingerprint": "4fc52e05b628d8c8083bf3a81012b26b3b38c3b7b0cf2fbc026aec033b8a74ec",
+        "operation_id": "operation-1",
+        "evidence_id": "evidence-1",
+        "check": "fixture-scope-check",
+        "producer": "fixture-verifier",
+        "outcome": "pass",
+        "artifact_digest": "1111111111111111111111111111111111111111111111111111111111111111"
+      }
+    },
+    {
+      "schema_version": 1,
+      "event_id": "event-8",
+      "at": 7,
+      "kind": "evidence",
+      "payload": {
+        "run_id": "run-1",
+        "snapshot": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "mission_fingerprint": "a56d00e8b5700a635313e90bf6fdec4d2fe9171f638312c4b197c4a6b4eb3860",
+        "proposal_fingerprint": "4fc52e05b628d8c8083bf3a81012b26b3b38c3b7b0cf2fbc026aec033b8a74ec",
+        "operation_id": "operation-1",
+        "evidence_id": "evidence-2",
+        "check": "fixture-evidence-check",
+        "producer": "fixture-verifier",
+        "outcome": "pass",
+        "artifact_digest": "2222222222222222222222222222222222222222222222222222222222222222"
+      }
+    },
+    {
+      "schema_version": 1,
+      "event_id": "event-9",
+      "at": 8,
+      "kind": "verify",
+      "payload": {
+        "run_id": "run-1"
+      }
+    }
+  ],
+  "expected": {
+    "run-1": "VERIFIED"
+  }
+}

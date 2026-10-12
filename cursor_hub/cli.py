@@ -30,6 +30,18 @@ def _get_hub_root() -> str | None:
     return installer.get_hub_root(os.path.normpath(os.path.join(pkg_dir, "..")))
 
 
+def _is_known_pack(name: str) -> bool:
+    """Recognize opt-in/new packs through the installer's manifest index."""
+    root = _get_hub_root()
+    if root is None:
+        return False
+    try:
+        installer.get_pack_dirs(root, [name])
+    except FileNotFoundError:
+        return False
+    return True
+
+
 def cmd_doctrine_setup(args: argparse.Namespace) -> int:
     target = os.path.abspath(args.target)
     return run_setup(
@@ -105,6 +117,8 @@ def main() -> int:
         description="Install Cursor packs (rules, commands, agents) into a project.",
     )
     subparsers = parser.add_subparsers(dest="command", required=True, help="Command")
+    from cursor_hub.orchestration.cli import configure_parser
+    configure_parser(subparsers)
 
     # install
     install_parser = subparsers.add_parser("install", help="Install packs into a target directory")
@@ -194,11 +208,12 @@ def main() -> int:
             parsed.target = os.path.abspath(os.getcwd())
             parsed.packs = ["all"]
         elif len(packs) == 1:
-            # One arg: either pack name / language shorthand (target=cwd) or path (packs=all, target=arg)
+            # Discover new packs while retaining the legacy pack/path interpretation.
             one = packs[0]
             if (
                 one == "all"
                 or one in installer.LANGUAGE_PACK_SETS
+                or _is_known_pack(one)
                 or one.startswith(
                     (
                         "rust-",

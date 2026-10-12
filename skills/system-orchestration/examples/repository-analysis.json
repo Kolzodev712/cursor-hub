@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "mission": {
+    "schema_version": 1,
+    "mission_id": "repository-analysis",
+    "revision": 1,
+    "execution_mode": "simulation",
+    "objective": "SYNTHETIC FIXTURE: assess supplied evidence; do not inspect or modify a real repository or machine.",
+    "scope": [
+      "ll-cache-frame-decoder"
+    ],
+    "event_sources": [
+      "fixture-input"
+    ],
+    "allowed_actions": [
+      "emit_report"
+    ],
+    "approval_required": [],
+    "approvers": [],
+    "required_checks": [
+      "fixture-scope-check",
+      "fixture-evidence-check"
+    ],
+    "evidence_producers": [
+      "fixture-verifier"
+    ],
+    "unresolved": [],
+    "limits": {
+      "max_runs": 2,
+      "max_events": 100,
+      "max_model_calls": 2,
+      "max_tokens": 4000,
+      "max_duration_seconds": 120
+    }
+  },
+  "events": [
+    {
+      "schema_version": 1,
+      "event_id": "event-1",
+      "at": 0,
+      "kind": "observe",
+      "payload": {
+        "run_id": "run-1",
+        "source": "fixture-input",
+        "origin": "external",
+        "scope": "ll-cache-frame-decoder",
+        "snapshot": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    {
+      "schema_version": 1,
+      "event_id": "event-2",
+      "at": 1,
+      "kind": "investigate",
+      "payload": {
+        "run_id": "run-1"
+      }
+    },
+    {
+      "schema_version": 1,
+      "event_id": "event-3",
+      "at": 2,
+      "kind": "worker_result",
+      "payload": {
+        "run_id": "run-1",
+        "snapshot": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "mission_fingerprint": "e84a19754de5e6aea9420195a6515259cc96f000e3b3efd7586e8dab30e0e222",
+        "proposal_id": "proposal-1",
+        "action": "emit_report",
+        "summary": "Synthetic hypothesis for supervisor tests, NOT a finding about actual ll-cache code or any machine.",
+        "classification": "hypothesis",
+        "usage": {
+          "model_calls": 1,
+          "tokens": 300
+        }
+      }
+    },
+    {
+      "schema_version": 1,
+      "event_id": "event-4",
+      "at": 3,
+      "kind": "authorize",
+      "payload": {
+        "run_id": "run-1"
+      }
+    },
+    {
+      "schema_version": 1,
+      "event_id": "event-5",
+      "at": 4,
+      "kind": "execute",
+      "payload": {
+        "run_id": "run-1",
+        "snapshot": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "mission_fingerprint": "e84a19754de5e6aea9420195a6515259cc96f000e3b3efd7586e8dab30e0e222",
+        "proposal_fingerprint": "ef2f94e318a291421206ef7a4031fc9a775dbc3aac120a4f0a7a413d58c4f325",
+        "operation_id": "operation-1",
+        "outcome": "succeeded"
+      }
+    },
+    {
+      "schema_version": 1,
+      "event_id": "event-6",
+      "at": 5,
+      "kind": "evidence",
+      "payload": {
+        "run_id": "run-1",
+        "snapshot": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "mission_fingerprint": "e84a19754de5e6aea9420195a6515259cc96f000e3b3efd7586e8dab30e0e222",
+        "proposal_fingerprint": "ef2f94e318a291421206ef7a4031fc9a775dbc3aac120a4f0a7a413d58c4f325",
+        "operation_id": "operation-1",
+        "evidence_id": "evidence-1",
+        "check": "fixture-scope-check",
+        "producer": "fixture-verifier",
+        "outcome": "pass",
+        "artifact_digest": "1111111111111111111111111111111111111111111111111111111111111111"
+      }
+    },
+    {
+      "schema_version": 1,
+      "event_id": "event-7",
+      "at": 6,
+      "kind": "evidence",
+      "payload": {
+        "run_id": "run-1",
+        "snapshot": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "mission_fingerprint": "e84a19754de5e6aea9420195a6515259cc96f000e3b3efd7586e8dab30e0e222",
+        "proposal_fingerprint": "ef2f94e318a291421206ef7a4031fc9a775dbc3aac120a4f0a7a413d58c4f325",
+        "operation_id": "operation-1",
+        "evidence_id": "evidence-2",
+        "check": "fixture-evidence-check",
+        "producer": "fixture-verifier",
+        "outcome": "pass",
+        "artifact_digest": "2222222222222222222222222222222222222222222222222222222222222222"
+      }
+    },
+    {
+      "schema_version": 1,
+      "event_id": "event-8",
+      "at": 7,
+      "kind": "verify",
+      "payload": {
+        "run_id": "run-1"
+      }
+    }
+  ],
+  "expected": {
+    "run-1": "VERIFIED"
+  }
+}
