@@ -2,6 +2,18 @@
 
 Packs live under `packs/cursor/`. Each has a `pack.yml` and optional `.cursor/rules/`, `.cursor/commands/`, `.cursor/agents/`. Command filenames use the `pack-name__command-name` convention so installing multiple packs does not collide.
 
+## system-orchestration (optional — construction kit and offline simulation)
+
+**Purpose:** Design and review event-driven AI systems using explicit missions, bounded authority, state transitions, evidence and recovery. Includes an offline reference supervisor, not a live autonomous runtime.
+
+**Install:** `cursor-hub install system-orchestration <target>` — not part of default `--lang` bundles or `all`. Install the optional CLI validation dependency from the hub checkout with `python -m pip install -e '.[orchestration]'`.
+
+**Contents:** `/system-orchestration__design`, `/system-orchestration__review`, a scoped non-always-on rule, a read-only reviewer role, the `system-orchestration` skill, references and synthetic repository/maintenance examples. No hooks, credentials, services, provider calls or real action executors.
+
+**CLI:** `cursor-hub orchestration schema`, `validate`, `simulate`, and `replay`. Simulation is in-memory unless a journal path is explicitly supplied. Project doctrine, fault-first and user-led/no-code learning boundaries remain unchanged. See [docs/system-orchestration.md](docs/system-orchestration.md).
+
+---
+
 There are **three ways** to use commands:
 
 1. **Main workflow** — Use design review, implement, and/or add tests in any order or on their own. Each pack numbers its own workflow steps (e.g. rust-design-review has wf-1, rust-implementation has wf-1, rust-testing has wf-1). The **design log is created or updated automatically** at the end of each workflow command. To create a log manually, use `/design-log__create`.

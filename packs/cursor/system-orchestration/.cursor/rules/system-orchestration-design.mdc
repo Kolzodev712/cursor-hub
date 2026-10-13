@@ -1,0 +1,10 @@
+---
+description: "Use when designing or reviewing event-driven AI operating contracts and supervisor boundaries. Does not activate agents."
+alwaysApply: false
+---
+
+# System orchestration design
+
+For this concern, read `.cursor/skills/system-orchestration/SKILL.md` and only the relevant reference sections. Keep the application supervisor, AI proposals, action authority, and verification separate. A natural-language instruction, doctrine read credit, or design-log stamp is not permission or proof of completion.
+
+This pack designs systems; it never starts one. Do not add credentials, live adapters, hooks, schedulers, or autonomous edits without separate explicit authorization. Preserve engineering-doctrine, fault-first, project ownership, and user-led/no-code learning boundaries.

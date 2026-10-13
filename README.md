@@ -2,9 +2,29 @@
 
 A **public Cursor AI hub**: modular rules, commands, and agents for guiding AI assistants. The content is **language- and model-agnostic** in principle; this repository ships **Cursor-only** instructions (rules, slash commands, agents) for **Rust**, **Python**, **JS/TS**, and **Terraform**, each with the same workflow structure (design-review → implementation → testing, plus bugfix and review).
 
+## Optional: system orchestration construction kit
+
+The **`system-orchestration`** pack helps design and review event-driven AI systems with explicit missions, bounded authority, state transitions, evidence and recovery. It adds `/system-orchestration__design`, `/system-orchestration__review`, progressive references, project design scaffolds and synthetic examples.
+
+The accompanying CLI provides **offline simulation only**, not a live autonomous runtime. It makes no model calls, starts no services, installs no hooks and dispatches no real actions. Simulated `VERIFIED` means the fixture's checks passed, not that an actual system or model finding was verified.
+
+```bash
+# From the hub checkout, install the optional validation/simulation dependency.
+python -m pip install -e '.[orchestration]'
+
+# Install the opt-in design pack; this does not activate any service.
+cursor-hub install system-orchestration /path/to/project
+
+# Run a synthetic example in memory; no persistent journal by default.
+cursor-hub orchestration validate skills/system-orchestration/examples/repository-analysis.json
+cursor-hub orchestration simulate skills/system-orchestration/examples/repository-analysis.json
+```
+
+Contracts can be exported with `cursor-hub orchestration schema mission`. Explicit `--journal` paths enable transactional local checkpoints and read-only replay. See **[docs/system-orchestration.md](docs/system-orchestration.md)** for lifecycle semantics, ownership, limitations and the separately approved path to live adapters. The pack is not included in `all` or any language bundle; engineering-doctrine, fault-first and the read-only/no-code ll-cache pilot retain their existing boundaries.
+
 ## What's in the repo
 
-- **Packs** under `packs/cursor/`: language-specific packs live in `packs/cursor/rust/`, `packs/cursor/python/`, `packs/cursor/js-ts/`, and `packs/cursor/terraform/` (each with design-review, implementation, testing, bugfix, review), plus shared packs `design-log`, `documentation`, `security`, and optional **`engineering-doctrine`** (ambient policy, project doctrine setup, hooks) and **`fault-first`** (read-only failure analysis; no hooks). Each pack has a `pack.yml` and optional `.cursor/rules/`, `.cursor/commands/`, `.cursor/agents/`. **Packs must not ship `.cursor/design-log/` content** — the installer only merges **rules**, **commands**, **agents**, and hub **tools**; it ensures `.cursor/design-log/` exists and adds `README.md` when absent. Numbered logs (`NNN-*.md`) are **never overwritten** (`--overwrite` touches rules/commands/agents only; `--refresh-design-log-readme` is an explicit README-only escape hatch).
+- **Packs** under `packs/cursor/`: language-specific packs live in `packs/cursor/rust/`, `packs/cursor/python/`, `packs/cursor/js-ts/`, and `packs/cursor/terraform/` (each with design-review, implementation, testing, bugfix, review), plus shared packs `design-log`, `documentation`, `security`, and optional **`engineering-doctrine`** (ambient policy, project doctrine setup, hooks), **`fault-first`** (read-only failure analysis; no hooks) and **`system-orchestration`** (construction kit and offline supervisor; no hooks or activation). Each pack has a `pack.yml` and optional `.cursor/rules/`, `.cursor/commands/`, `.cursor/agents/`. **Packs must not ship `.cursor/design-log/` content** — the installer only merges **rules**, **commands**, **agents**, and hub **tools**; it ensures `.cursor/design-log/` exists and adds `README.md` when absent. Numbered logs (`NNN-*.md`) are **never overwritten** (`--overwrite` touches rules/commands/agents only; `--refresh-design-log-readme` is an explicit README-only escape hatch).
 - **CLI and tools:** `cursor-hub` CLI (from `pip install -e .`) or `python tools/install.py` install packs; `tools/` also has validate_packs, new_design_log, and an optional export stub. When you install packs, scripts are copied into the target's `.cursor/tools/`. Use `pip install -e .` for the CLI, or run the script from the hub repo (see `tools/requirements.txt` if needed).
 
 - **Shared foundation** (`_shared`): design-log methodology and when-to-log guidance. It is always installed when you install any other pack.
@@ -30,7 +50,7 @@ cursor-hub install rust-design-review rust-implementation ../my-project
 ```bash
 cd .cursor-hub
 python tools/install.py all /path/to/your/project
-python tools/install.py --lang python all ../my-project
+python tools/install.py all ../my-project --lang python
 ```
 
 You can also run `python -m cursor_hub install all .` from the hub repo without installing the package.
@@ -45,9 +65,9 @@ cursor-hub install all ../my-project
 cursor-hub install --lang python all .
 cursor-hub install --dry-run all .
 
-# Or script from hub repo
+# Or script from repo
 python tools/install.py all ../my-project
-python tools/install.py --lang python all ../my-project
+python tools/install.py all ../my-project --lang python
 python tools/install.py rust-design-review rust-implementation ../my-project
 ```
 
@@ -75,6 +95,7 @@ cursor-hub install --lang python all ..
 | **rust-refactor** / **python-refactor** / **js-ts-refactor** | Assess fit vs alternatives → execute refactor → verify improvement (see [CATALOG.md](CATALOG.md)); Terraform has no refactor pack yet. |
 | **security** | Security audit agent and `/security__standalone-audit`: vulnerabilities, deps, secrets, auth, crypto, misconfiguration, CI/CD. |
 | **fault-first** | Opt-in read-only failure analysis: `/fault-first__analyze` + `fault-first` skill; no hooks; see [docs/fault-first.md](docs/fault-first.md). |
+| **system-orchestration** | Opt-in system design/review construction kit, closed contracts and offline simulation; see [docs/system-orchestration.md](docs/system-orchestration.md). |
 
 You can install multiple packs; they merge into a single `.cursor/`. Commands are namespaced by pack (e.g. `/rust-design-review__wf-1-design-review`, `/python-design-review__wf-1-design-review`). Use the **main workflow** (design, implement, test) in any order or on their own — each pack numbers its own steps (e.g. wf-1). **Other flows:** bugfix (wf-1–3), refactor (wf-1–3 for **rust-** / **python-** / **js-ts-**). **Standalone** commands: gates, small safe refactor, PR review, etc. See [CATALOG.md](CATALOG.md) for the full list.
 

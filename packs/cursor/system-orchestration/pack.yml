@@ -1,0 +1,5 @@
+name: system-orchestration
+version: 0.1.0
+description: Opt-in construction kit for bounded event-driven AI systems; offline simulation only.
+skills:
+  - system-orchestration

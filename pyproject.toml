@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cursor-hub"
-version = "0.6.0"
+version = "0.7.0"
 description = "Install Cursor packs (rules, commands, agents) into a project. Design-log workflow and language workflows for Rust, Python, JS/TS, Terraform."
 readme = "README.md"
 license = { text = "MIT" }
@@ -18,6 +18,9 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
+
+[project.optional-dependencies]
+orchestration = ["jsonschema>=4.18,<5"]
 
 [project.scripts]
 cursor-hub = "cursor_hub.cli:main"
